@@ -5,6 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sign In - Perch</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
+      authDomain: "perch-96206.firebaseapp.com",
+      projectId: "perch-96206",
+      storageBucket: "perch-96206.firebasestorage.app",
+      messagingSenderId: "666435496292",
+      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // Make functions available globally
+    window.firebaseGoogleLogin = async function() {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userName', user.displayName || user.email.split('@')[0]);
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('userPhoto', user.photoURL || '');
+        localStorage.setItem('loginProvider', 'google');
+        localStorage.removeItem('isGuest');
+
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Google login error:', error);
+        alert('Login failed: ' + error.message);
+      }
+    };
+
+    window.firebaseEmailSignIn = async function(email, password) {
+      try {
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        const user = result.user;
+
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userName', user.displayName || email.split('@')[0]);
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('loginProvider', 'email');
+        localStorage.removeItem('isGuest');
+
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Email login error:', error);
+        if (error.code === 'auth/user-not-found') {
+          alert('No account found with this email. Please sign up first.');
+        } else if (error.code === 'auth/wrong-password') {
+          alert('Incorrect password. Please try again.');
+        } else {
+          alert('Login failed: ' + error.message);
+        }
+      }
+    };
+
+    window.firebaseEmailSignUp = async function(name, email, password) {
+      try {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        const user = result.user;
+
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userName', name);
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('loginProvider', 'email');
+        localStorage.removeItem('isGuest');
+
+        window.location.href = 'account.html';
+      } catch (error) {
+        console.error('Sign up error:', error);
+        if (error.code === 'auth/email-already-in-use') {
+          alert('An account with this email already exists. Please sign in.');
+        } else if (error.code === 'auth/weak-password') {
+          alert('Password should be at least 6 characters.');
+        } else {
+          alert('Sign up failed: ' + error.message);
+        }
+      }
+    };
+  </script>
   <style>
     .login-page {
       display: flex;
@@ -458,44 +544,43 @@
     }
 
     function socialLogin(provider) {
-      // Simulate social login
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userName', provider === 'google' ? 'John Doe' : 'John');
-      localStorage.setItem('userEmail', 'john@example.com');
-      localStorage.setItem('loginProvider', provider);
-
-      // Redirect to home
-      window.location.href = 'index.html';
+      if (provider === 'google') {
+        // Use Firebase Google login
+        if (window.firebaseGoogleLogin) {
+          window.firebaseGoogleLogin();
+        } else {
+          // Firebase not loaded yet, wait a moment
+          setTimeout(() => window.firebaseGoogleLogin(), 500);
+        }
+      } else if (provider === 'apple') {
+        // Apple Sign-In would need separate setup
+        alert('Apple Sign-In coming soon! Please use Google or email for now.');
+      }
     }
 
     function handleSignIn(e) {
       e.preventDefault();
       const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
-      // Create a nice display name from email
-      const namePart = email.split('@')[0];
-      const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1).replace(/[._]/g, ' ');
-
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userName', displayName);
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('loginProvider', 'email');
-      localStorage.removeItem('isGuest');
-
-      window.location.href = 'index.html';
+      if (window.firebaseEmailSignIn) {
+        window.firebaseEmailSignIn(email, password);
+      } else {
+        setTimeout(() => window.firebaseEmailSignIn(email, password), 500);
+      }
     }
 
     function handleSignUp(e) {
       e.preventDefault();
       const name = document.getElementById('signup-name').value;
       const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
 
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userName', name);
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('loginProvider', 'email');
-
-      window.location.href = 'account.html';
+      if (window.firebaseEmailSignUp) {
+        window.firebaseEmailSignUp(name, email, password);
+      } else {
+        setTimeout(() => window.firebaseEmailSignUp(name, email, password), 500);
+      }
     }
 
     function continueAsGuest() {
