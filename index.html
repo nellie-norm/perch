@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Perch - Find Your Workspace</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .home-page {
+      background: linear-gradient(180deg, #E8F0ED 0%, var(--bg) 40%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .profile-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .profile-icon {
+      width: 22px;
+      height: 22px;
+      color: var(--text-secondary);
+    }
+
+    .profile-avatar {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      background: var(--primary);
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .home-header {
+      padding-top: 48px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .home-logo {
+      margin-bottom: 24px;
+    }
+
+    .home-logo svg {
+      width: 64px;
+      height: 64px;
+    }
+
+    .home-title {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+    }
+
+    .home-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .search-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .time-picker-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .popular-section {
+      margin-top: 32px;
+    }
+
+    .popular-section h3 {
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .popular-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .popular-tag {
+      padding: 10px 16px;
+      background: var(--card);
+      border-radius: 20px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: var(--shadow);
+    }
+
+    .popular-tag:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .features {
+      margin-top: auto;
+      padding-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      text-align: center;
+    }
+
+    .feature {
+      padding: 16px 8px;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      color: white;
+    }
+
+    .feature h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .feature p {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    .geolocation-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .geolocation-btn:hover {
+      background: rgba(45, 90, 74, 0.05);
+      border-color: var(--primary);
+    }
+
+    .geolocation-btn.loading {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .geolocation-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Responsive styles */
+    @media (min-width: 768px) {
+      .home-page {
+        align-items: center;
+        justify-content: center;
+        padding: 48px 32px;
+      }
+
+      .home-header {
+        padding-top: 0;
+      }
+
+      .home-title {
+        font-size: 42px;
+      }
+
+      .home-subtitle {
+        font-size: 18px;
+      }
+
+      .search-card {
+        width: 100%;
+        max-width: 500px;
+        padding: 32px;
+      }
+
+      .popular-section {
+        width: 100%;
+        max-width: 500px;
+      }
+
+      .features {
+        width: 100%;
+        max-width: 600px;
+        gap: 32px;
+      }
+
+      .feature-icon {
+        width: 56px;
+        height: 56px;
+      }
+
+      .feature h4 {
+        font-size: 15px;
+      }
+
+      .feature p {
+        font-size: 13px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .home-page {
+        padding: 64px 48px;
+      }
+
+      .home-logo svg {
+        width: 80px;
+        height: 80px;
+      }
+
+      .home-title {
+        font-size: 52px;
+      }
+
+      .home-subtitle {
+        font-size: 20px;
+      }
+
+      .search-card {
+        max-width: 560px;
+        padding: 40px;
+      }
+
+      .time-picker-group {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .input-group[style*="margin-bottom: 0"] {
+        grid-column: span 1;
+      }
+
+      .features {
+        max-width: 700px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page home-page">
+    <header class="home-header animate-in">
+      <div class="profile-btn" id="profile-btn" onclick="handleProfileClick()">
+        <svg class="profile-icon" id="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="profile-avatar" id="profile-avatar" style="display:none;">JD</span>
+      </div>
+      <div class="home-logo">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="16" fill="#2D5A4A"/>
+          <path d="M20 44V24C20 21.7909 21.7909 20 24 20H40C42.2091 20 44 21.7909 44 24V44" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <path d="M16 44H48" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="32" cy="32" r="6" stroke="white" stroke-width="3"/>
+          <path d="M32 26V20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="home-title">Perch</h1>
+      <p class="home-subtitle">Work anywhere. Book a seat at local spots.</p>
+    </header>
+
+    <div class="search-card animate-in">
+      <div class="input-group">
+        <label>Location</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <input type="text" class="input" placeholder="Enter address or neighborhood" id="location-input" value="Shoreditch, London">
+        </div>
+        <button class="geolocation-btn" id="geolocation-btn" onclick="getLocation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            <circle cx="12" cy="12" r="8"/>
+          </svg>
+          Use my location
+        </button>
+      </div>
+
+      <div class="time-picker-group">
+        <div class="input-group">
+          <label>Date</label>
+          <input type="date" class="input" id="date-input">
+        </div>
+        <div class="input-group">
+          <label>Time</label>
+          <select class="input" id="time-input">
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00" selected>2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 0;">
+        <label>Duration</label>
+        <select class="input" id="duration-input">
+          <option value="1">1 hour</option>
+          <option value="2" selected>2 hours</option>
+          <option value="3">3 hours</option>
+          <option value="4">4 hours</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary mt-24" onclick="window.location.href='results.html'">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        Search Workspaces
+      </button>
+    </div>
+
+    <div class="popular-section animate-in">
+      <h3>Popular neighbourhoods</h3>
+      <div class="popular-tags">
+        <span class="popular-tag">Shoreditch</span>
+        <span class="popular-tag">Soho</span>
+        <span class="popular-tag">Clerkenwell</span>
+        <span class="popular-tag">Fitzrovia</span>
+        <span class="popular-tag">King's Cross</span>
+      </div>
+    </div>
+
+    <div class="features animate-in">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <circle cx="12" cy="20" r="1"/>
+          </svg>
+        </div>
+        <h4>Fast WiFi</h4>
+        <p>All spots verified</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+            <line x1="12" y1="2" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <h4>Power</h4>
+        <p>Outlets at every seat</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h4>Safe</h4>
+        <p>Vetted locations</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date-input').value = today;
+
+    // Geolocation functionality
+    function getLocation() {
+      const btn = document.getElementById('geolocation-btn');
+      const input = document.getElementById('location-input');
+
+      btn.classList.add('loading');
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        Finding location...
+      `;
+
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            // Store coords for distance calculation
+            localStorage.setItem('userLat', lat);
+            localStorage.setItem('userLng', lng);
+
+            // Reverse geocode (simplified - in production use a geocoding API)
+            reverseGeocode(lat, lng).then(address => {
+              input.value = address;
+              btn.classList.remove('loading');
+              btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Location found
+              `;
+              btn.style.color = 'var(--success)';
+              btn.style.borderColor = 'var(--success)';
+            });
+          },
+          (error) => {
+            btn.classList.remove('loading');
+            btn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                <circle cx="12" cy="12" r="8"/>
+              </svg>
+              Use my location
+            `;
+            alert('Unable to get location. Please enter it manually.');
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        btn.classList.remove('loading');
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    // Simple reverse geocoding (simulated for demo)
+    async function reverseGeocode(lat, lng) {
+      // In production, use Google Maps, Mapbox, or OpenStreetMap Nominatim API
+      // For demo, we'll return a London area based on rough coordinates
+
+      // Central London approximate bounds
+      if (lat > 51.50 && lat < 51.53 && lng > -0.15 && lng < -0.05) {
+        return 'Shoreditch, London';
+      } else if (lat > 51.51 && lat < 51.52 && lng > -0.14 && lng < -0.12) {
+        return 'Clerkenwell, London';
+      } else if (lat > 51.51 && lat < 51.52 && lng > -0.13 && lng < -0.11) {
+        return 'Soho, London';
+      } else {
+        return 'Central London';
+      }
+    }
+
+    // Add spinning animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .spin { animation: spin 1s linear infinite; }
+    `;
+    document.head.appendChild(style);
+
+    // Profile/Login state management
+    function updateProfileButton() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const userName = localStorage.getItem('userName') || '';
+      const profileIcon = document.getElementById('profile-icon');
+      const profileAvatar = document.getElementById('profile-avatar');
+
+      if (isLoggedIn && userName) {
+        const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        profileAvatar.textContent = initials;
+        profileIcon.style.display = 'none';
+        profileAvatar.style.display = 'flex';
+      } else {
+        profileIcon.style.display = 'block';
+        profileAvatar.style.display = 'none';
+      }
+    }
+
+    function handleProfileClick() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      if (isLoggedIn) {
+        window.location.href = 'account.html';
+      } else {
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Initialize profile button on page load
+    updateProfileButton();
+  </script>
+</body>
+</html>

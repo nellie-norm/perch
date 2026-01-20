@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Account - Perch</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .account-page {
+      padding-bottom: 32px;
+    }
+
+    .account-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .user-info h2 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .user-info p {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .section-action {
+      font-size: 14px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .section-action:hover {
+      text-decoration: underline;
+    }
+
+    /* Payment Methods */
+    .payment-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .payment-icon {
+      width: 48px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .payment-icon.visa {
+      background: linear-gradient(135deg, #1A1F71 0%, #2E3B8E 100%);
+      color: white;
+    }
+
+    .payment-icon.apple-pay {
+      background: #000;
+      color: white;
+    }
+
+    .payment-icon.google-pay {
+      background: white;
+      border: 1px solid var(--border);
+    }
+
+    .payment-details {
+      flex: 1;
+    }
+
+    .payment-name {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .payment-info {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .payment-default {
+      font-size: 11px;
+      color: var(--success);
+      background: #E8F9ED;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .payment-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: var(--border);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Add Payment Button */
+    .add-payment-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--bg);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .add-payment-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(45, 90, 74, 0.05);
+    }
+
+    .add-payment-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Favourites */
+    .favourites-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .favourite-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .favourite-card:hover {
+      transform: translateX(4px);
+    }
+
+    .favourite-image {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8B7355 0%, #D4A574 100%);
+      flex-shrink: 0;
+    }
+
+    .favourite-card:nth-child(2) .favourite-image {
+      background: linear-gradient(135deg, #5D6D7E 0%, #85929E 100%);
+    }
+
+    .favourite-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .favourite-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .favourite-location {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .favourite-heart {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FF3B5C;
+    }
+
+    .favourite-heart svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    /* Menu Items */
+    .menu-list {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .menu-item:hover {
+      background: var(--bg);
+    }
+
+    .menu-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+
+    .menu-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .menu-content {
+      flex: 1;
+    }
+
+    .menu-label {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .menu-sublabel {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .menu-arrow {
+      color: var(--text-light);
+    }
+
+    .menu-arrow svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 16px;
+      background: transparent;
+      border: 1px solid var(--error);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--error);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 24px;
+    }
+
+    .logout-btn:hover {
+      background: var(--error);
+      color: white;
+    }
+
+    /* Add Payment Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      padding: 24px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .modal-close svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .payment-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .payment-option:hover {
+      border-color: var(--primary-light);
+    }
+
+    .payment-option.selected {
+      border-color: var(--primary);
+      background: rgba(45, 90, 74, 0.05);
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .account-container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .favourites-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .modal-overlay {
+        align-items: center;
+      }
+
+      .modal-content {
+        border-radius: 20px;
+        max-height: 70vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page account-page">
+    <div class="account-container">
+      <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2>My Account</h2>
+      </div>
+
+      <div class="account-header animate-in">
+        <div class="avatar" id="user-avatar">JD</div>
+        <div class="user-info">
+          <h2 id="user-name">John Doe</h2>
+          <p id="user-email">john@example.com</p>
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div class="section animate-in">
+        <div class="section-header">
+          <h3 class="section-title">Payment Methods</h3>
+        </div>
+
+        <div class="payment-card">
+          <div class="payment-icon apple-pay">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+            </svg>
+          </div>
+          <div class="payment-details">
+            <div class="payment-name">Apple Pay</div>
+            <div class="payment-info">Linked to your Apple ID</div>
+          </div>
+          <span class="payment-default">Default</span>
+        </div>
+
+        <div class="payment-card">
+          <div class="payment-icon google-pay">
+            <svg viewBox="0 0 24 24" width="28" height="28">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+          </div>
+          <div class="payment-details">
+            <div class="payment-name">Google Pay</div>
+            <div class="payment-info">john@gmail.com</div>
+          </div>
+          <button class="icon-btn" title="Set as default">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="payment-card">
+          <div class="payment-icon visa">VISA</div>
+          <div class="payment-details">
+            <div class="payment-name">•••• 4242</div>
+            <div class="payment-info">Expires 12/25</div>
+          </div>
+          <button class="icon-btn" title="Set as default">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </button>
+        </div>
+
+        <button class="add-payment-btn" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Payment Method
+        </button>
+      </div>
+
+      <!-- Favourites -->
+      <div class="section animate-in">
+        <div class="section-header">
+          <h3 class="section-title">Favourite Places</h3>
+          <a href="results.html" class="section-action">View all</a>
+        </div>
+
+        <div class="favourites-grid" id="favourites-grid">
+          <div class="favourite-card" onclick="window.location.href='venue.html'">
+            <div class="favourite-image"></div>
+            <div class="favourite-details">
+              <div class="favourite-name">Allpress Espresso</div>
+              <div class="favourite-location">Shoreditch</div>
+            </div>
+            <div class="favourite-heart">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+          </div>
+          <div class="favourite-card" onclick="window.location.href='venue.html'">
+            <div class="favourite-image"></div>
+            <div class="favourite-details">
+              <div class="favourite-name">Ozone Coffee</div>
+              <div class="favourite-location">Old Street</div>
+            </div>
+            <div class="favourite-heart">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <div class="section animate-in">
+        <div class="menu-list">
+          <div class="menu-item">
+            <div class="menu-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="menu-content">
+              <div class="menu-label">Booking History</div>
+              <div class="menu-sublabel">View past reservations</div>
+            </div>
+            <div class="menu-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="menu-item">
+            <div class="menu-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </div>
+            <div class="menu-content">
+              <div class="menu-label">Settings</div>
+              <div class="menu-sublabel">Notifications, privacy</div>
+            </div>
+            <div class="menu-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="menu-item">
+            <div class="menu-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="menu-content">
+              <div class="menu-label">Help & Support</div>
+              <div class="menu-sublabel">FAQs, contact us</div>
+            </div>
+            <div class="menu-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- Add Payment Modal -->
+  <div class="modal-overlay" id="payment-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Payment Method</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="payment-option" onclick="selectPaymentOption(this)">
+        <div class="payment-icon apple-pay">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+        </div>
+        <div class="payment-details">
+          <div class="payment-name">Apple Pay</div>
+          <div class="payment-info">Fast, secure payments with Face ID</div>
+        </div>
+      </div>
+
+      <div class="payment-option" onclick="selectPaymentOption(this)">
+        <div class="payment-icon google-pay">
+          <svg viewBox="0 0 24 24" width="28" height="28">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+        </div>
+        <div class="payment-details">
+          <div class="payment-name">Google Pay</div>
+          <div class="payment-info">Pay with your Google account</div>
+        </div>
+      </div>
+
+      <div class="payment-option" onclick="selectPaymentOption(this)">
+        <div class="payment-icon" style="background: #635BFF; color: white; font-size: 10px; font-weight: 700;">stripe</div>
+        <div class="payment-details">
+          <div class="payment-name">Credit or Debit Card</div>
+          <div class="payment-info">Powered by Stripe</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top: 16px;" onclick="addPaymentMethod()">Continue</button>
+    </div>
+  </div>
+
+  <script>
+    // Load user data
+    document.addEventListener('DOMContentLoaded', () => {
+      const name = localStorage.getItem('userName') || 'John Doe';
+      const email = localStorage.getItem('userEmail') || 'john@example.com';
+
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-email').textContent = email;
+      document.getElementById('user-avatar').textContent = name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+      // Load favourites from localStorage
+      const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+      if (favourites.length === 0) {
+        // Keep default favourites for demo
+      }
+    });
+
+    function openModal() {
+      document.getElementById('payment-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('payment-modal').classList.remove('active');
+    }
+
+    function selectPaymentOption(el) {
+      document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function addPaymentMethod() {
+      closeModal();
+      // In a real app, this would open the respective payment flow
+      alert('Payment method added! (Demo)');
+    }
+
+    function logout() {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('loginProvider');
+      window.location.href = 'login.html';
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('payment-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'payment-modal') {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

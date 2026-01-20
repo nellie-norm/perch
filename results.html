@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Search Results - Perch</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    .results-header {
+      margin-bottom: 16px;
+    }
+
+    .profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-left: auto;
+    }
+
+    .profile-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .profile-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    .profile-avatar {
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+      background: var(--primary);
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .search-summary {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .search-summary-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .search-summary-text strong {
+      color: var(--text);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      padding: 8px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-chip:hover,
+    .filter-chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .filter-chip svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .results-count {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 12px;
+    }
+
+    .venue-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .venue-card:active {
+      transform: scale(0.98);
+    }
+
+    .venue-image {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #E8F0ED 0%, #D4E4DD 100%);
+    }
+
+    .venue-content {
+      padding: 14px 16px;
+    }
+
+    .venue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .venue-name {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .venue-type {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .venue-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .venue-rating svg {
+      color: var(--accent);
+    }
+
+    .venue-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .venue-distance,
+    .venue-availability {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .venue-availability {
+      color: var(--success);
+    }
+
+    .venue-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .venue-amenities {
+      display: flex;
+      gap: 8px;
+    }
+
+    .amenity {
+      width: 28px;
+      height: 28px;
+      background: var(--bg);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .amenity svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+    }
+
+    .amenity.inactive svg {
+      color: var(--text-light);
+      opacity: 0.4;
+    }
+
+    /* WiFi quality badges */
+    .wifi-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .wifi-badge.fast {
+      background: #E3F2E8;
+      color: #1B7340;
+    }
+
+    .wifi-badge.fine {
+      background: #FFF4E5;
+      color: #B86E00;
+    }
+
+    .wifi-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Walk time indicator */
+    .walk-time {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .walk-time.nearby {
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    .walk-time svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Filter toggle for walk time */
+    .walk-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--card);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .walk-filter-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+
+    .walk-filter-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .walk-filter-toggle.active {
+      background: var(--primary);
+    }
+
+    .walk-filter-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .walk-filter-toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    .venue-card.hidden {
+      display: none;
+    }
+
+    /* Favourite button */
+    .favourite-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .favourite-btn:hover {
+      transform: scale(1.1);
+      background: white;
+    }
+
+    .favourite-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-light);
+      transition: all 0.2s;
+    }
+
+    .favourite-btn.active svg {
+      color: #E53935;
+      fill: #E53935;
+    }
+
+    .venue-image-container {
+      position: relative;
+    }
+
+    .venue-price {
+      text-align: right;
+    }
+
+    .venue-price-amount {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .venue-price-unit {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    /* Placeholder images with gradients */
+    .venue-card[data-id="allpress"] .venue-image {
+      background: linear-gradient(135deg, #8B7355 0%, #D4A574 100%);
+    }
+    .venue-card[data-id="ozone"] .venue-image {
+      background: linear-gradient(135deg, #5D6D7E 0%, #85929E 100%);
+    }
+    .venue-card[data-id="hoxton"] .venue-image {
+      background: linear-gradient(135deg, #7D6B5D 0%, #A89080 100%);
+    }
+    .venue-card[data-id="lookmum"] .venue-image {
+      background: linear-gradient(135deg, #6B7D5D 0%, #90A880 100%);
+    }
+    .venue-card[data-id="caravan"] .venue-image {
+      background: linear-gradient(135deg, #5D7D8E 0%, #7DA0B0 100%);
+    }
+    .venue-card[data-id="attendant"] .venue-image {
+      background: linear-gradient(135deg, #8D6D7E 0%, #A08090 100%);
+    }
+
+    /* Responsive styles */
+    .results-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .venues-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .venues-grid .venue-card {
+      margin-bottom: 0;
+    }
+
+    @media (min-width: 768px) {
+      .page {
+        padding: 24px 32px;
+      }
+
+      .results-container {
+        padding: 0;
+      }
+
+      .page-header h2 {
+        font-size: 28px;
+      }
+
+      .search-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .filter-bar {
+        justify-content: flex-start;
+      }
+
+      .venues-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .venue-image {
+        height: 160px;
+      }
+
+      .venue-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .venue-card:active {
+        transform: translateY(-2px);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .page {
+        padding: 32px 48px;
+      }
+
+      .venues-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+
+      .venue-image {
+        height: 180px;
+      }
+
+      .venue-name {
+        font-size: 18px;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .venues-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    /* Guest favourite notice toast */
+    .guest-fav-notice {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .guest-fav-notice-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--text);
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .guest-fav-notice-content svg {
+      width: 24px;
+      height: 24px;
+      color: #E53935;
+      fill: #E53935;
+      flex-shrink: 0;
+    }
+
+    .guest-fav-notice-content strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .guest-fav-notice-content p {
+      font-size: 12px;
+      opacity: 0.8;
+      margin: 0;
+    }
+
+    .guest-fav-notice-content button {
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .guest-fav-notice-content button:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* View Toggle */
+    .view-toggle {
+      display: flex;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .view-toggle-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--card);
+      color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .view-toggle-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Map Container */
+    .map-container {
+      display: none;
+      height: calc(100vh - 280px);
+      min-height: 400px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .map-container.active {
+      display: block;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .list-container.hidden {
+      display: none;
+    }
+
+    /* Map Popup Styles */
+    .map-popup {
+      min-width: 200px;
+    }
+
+    .map-popup-image {
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .map-popup-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .map-popup-type {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+
+    .map-popup-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .map-popup-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .map-popup-rating svg {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+    }
+
+    .map-popup-price {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .map-popup-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    /* Custom map marker */
+    .custom-marker {
+      background: var(--primary);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      white-space: nowrap;
+    }
+
+    .custom-marker::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid var(--primary);
+    }
+
+    /* Leaflet overrides */
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      padding: 0;
+    }
+
+    .leaflet-popup-content {
+      margin: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .map-container {
+        height: calc(100vh - 320px);
+        min-height: 500px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .map-container {
+        height: calc(100vh - 280px);
+        min-height: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="results-container">
+      <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div>
+          <h2>Workspaces</h2>
+        </div>
+        <div class="profile-btn" onclick="handleProfileClick()">
+          <svg class="profile-icon" id="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="profile-avatar" id="profile-avatar" style="display:none;">JD</span>
+        </div>
+      </div>
+
+      <div class="search-summary animate-in">
+        <p class="search-summary-text">
+          <strong>Shoreditch, London</strong> · Today, 2:00 PM · 2 hours
+        </p>
+      </div>
+
+      <div class="filter-bar animate-in">
+        <div class="filter-chip active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"/>
+            <line x1="4" y1="10" x2="4" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12" y2="3"/>
+            <line x1="20" y1="21" x2="20" y2="16"/>
+            <line x1="20" y1="12" x2="20" y2="3"/>
+          </svg>
+          Filters
+        </div>
+        <div class="filter-chip" onclick="toggleFilter(this, 'fast-wifi')">Fast WiFi</div>
+        <div class="filter-chip" onclick="toggleFilter(this, 'power')">Power</div>
+        <div class="filter-chip" onclick="toggleFilter(this, 'quiet')">Quiet</div>
+        <div class="filter-chip" onclick="toggleFilter(this, 'under10')">Under £10</div>
+      </div>
+
+      <div class="walk-filter animate-in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--primary)">
+          <path d="M13 4v16M13 4l-4 4M13 4l4 4M6 20h12"/>
+          <circle cx="13" cy="2" r="1"/>
+        </svg>
+        <span class="walk-filter-label">Only show places within 10 min walk</span>
+        <div class="walk-filter-toggle active" id="walk-toggle" onclick="toggleWalkFilter()"></div>
+      </div>
+
+      <!-- View Toggle -->
+      <div class="view-toggle animate-in">
+        <button class="view-toggle-btn active" onclick="switchView('list')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          List
+        </button>
+        <button class="view-toggle-btn" onclick="switchView('map')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+            <line x1="8" y1="2" x2="8" y2="18"/>
+            <line x1="16" y1="6" x2="16" y2="22"/>
+          </svg>
+          Map
+        </button>
+      </div>
+
+      <p class="results-count" id="results-count">8 spots available</p>
+
+      <!-- Map Container -->
+      <div class="map-container" id="map-container">
+        <div id="map"></div>
+      </div>
+
+      <!-- List Container -->
+      <div class="list-container" id="list-container">
+      <div class="venues-grid" id="venues-grid">
+        <!-- Venue 1: Allpress Espresso - 4 min walk, Fast WiFi -->
+        <div class="venue-card animate-in" data-id="allpress" data-walk="4" data-wifi="fast" data-price="7" onclick="window.location.href='venue.html'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'allpress', 'Allpress Espresso')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">Allpress Espresso</h3>
+                <p class="venue-type">Coffee Roasters · Shoreditch</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.8
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time nearby">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                4 min walk
+              </span>
+              <span class="wifi-badge fast">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                Fast · Great for calls
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Coffee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£7</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue 2: Ozone Coffee - 7 min walk, Fast WiFi -->
+        <div class="venue-card animate-in" data-id="ozone" data-walk="7" data-wifi="fast" data-price="8" onclick="window.location.href='venue.html'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'ozone', 'Ozone Coffee Roasters')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">Ozone Coffee Roasters</h3>
+                <p class="venue-type">Café · Old Street</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.7
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time nearby">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                7 min walk
+              </span>
+              <span class="wifi-badge fast">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                Fast · Great for calls
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£8</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue 3: The Hoxton - 5 min walk, Fine WiFi -->
+        <div class="venue-card animate-in" data-id="hoxton" data-walk="5" data-wifi="fine" data-price="6" onclick="window.location.href='venue.html'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'hoxton', 'The Hoxton Lobby')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">The Hoxton Lobby</h3>
+                <p class="venue-type">Hotel Café · Shoreditch</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.5
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time nearby">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                5 min walk
+              </span>
+              <span class="wifi-badge fine">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                Fine · Basic browsing
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Coffee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£6</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue 4: Look Mum No Hands - 9 min walk, Fast WiFi -->
+        <div class="venue-card animate-in" data-id="lookmum" data-walk="9" data-wifi="fast" data-price="5" onclick="window.location.href='venue.html'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'lookmum', 'Look Mum No Hands!')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">Look Mum No Hands!</h3>
+                <p class="venue-type">Bike Café · Clerkenwell</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.6
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time nearby">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                9 min walk
+              </span>
+              <span class="wifi-badge fast">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                Fast · Great for calls
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£5</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue 5: Caravan King's Cross - 14 min walk, Fast WiFi -->
+        <div class="venue-card animate-in" data-id="caravan" data-walk="14" data-wifi="fast" data-price="9" onclick="window.location.href='venue.html'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'caravan', 'Caravan King\\'s Cross')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">Caravan King's Cross</h3>
+                <p class="venue-type">Restaurant · King's Cross</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.4
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                14 min walk
+              </span>
+              <span class="wifi-badge fast">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                Fast · Great for calls
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£9</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue 6: Attendant Fitzrovia - 18 min walk, Fine WiFi -->
+        <div class="venue-card animate-in" data-id="attendant" data-walk="18" data-wifi="fine" data-price="6" onclick="window.location.href='venue.html'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'attendant', 'Attendant Fitzrovia')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">Attendant Fitzrovia</h3>
+                <p class="venue-type">Café · Fitzrovia</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.3
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                18 min walk
+              </span>
+              <span class="wifi-badge fine">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1"/>
+                </svg>
+                Fine · Basic browsing
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Coffee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£6</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      </div> <!-- End list-container -->
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    // Venue data with coordinates (Shoreditch/East London area)
+    const venues = [
+      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, walk: 4, wifi: 'fast' },
+      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, walk: 7, wifi: 'fast' },
+      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, walk: 5, wifi: 'fine' },
+      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, walk: 9, wifi: 'fast' },
+      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, walk: 14, wifi: 'fast' },
+      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, walk: 18, wifi: 'fine' }
+    ];
+
+    let map = null;
+    let markers = [];
+
+    // Walk time filter
+    let walkFilterActive = true;
+
+    function toggleWalkFilter() {
+      const toggle = document.getElementById('walk-toggle');
+      walkFilterActive = !walkFilterActive;
+      toggle.classList.toggle('active', walkFilterActive);
+      filterVenues();
+    }
+
+    function filterVenues() {
+      const cards = document.querySelectorAll('.venue-card');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const walkTime = parseInt(card.dataset.walk);
+        const shouldShow = !walkFilterActive || walkTime <= 10;
+
+        if (shouldShow) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // Update count
+      document.querySelector('.results-count').textContent = `${visibleCount} spots available`;
+    }
+
+    function toggleFilter(el, filterType) {
+      el.classList.toggle('active');
+      // Filter logic would go here for a real app
+    }
+
+    // Initial filter
+    filterVenues();
+
+    // Favourites functionality
+    function getFavourites() {
+      const favourites = localStorage.getItem('favourites');
+      return favourites ? JSON.parse(favourites) : [];
+    }
+
+    function saveFavourites(favourites) {
+      localStorage.setItem('favourites', JSON.stringify(favourites));
+    }
+
+    function toggleFavourite(event, venueId, venueName) {
+      event.stopPropagation(); // Prevent card click
+
+      const btn = event.currentTarget;
+      const favourites = getFavourites();
+      const index = favourites.findIndex(f => f.id === venueId);
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+      if (index > -1) {
+        // Remove from favourites
+        favourites.splice(index, 1);
+        btn.classList.remove('active');
+      } else {
+        // Add to favourites
+        favourites.push({
+          id: venueId,
+          name: venueName,
+          addedAt: new Date().toISOString()
+        });
+        btn.classList.add('active');
+
+        // Show notice for guests on first favourite
+        if (!isLoggedIn && favourites.length === 1) {
+          showGuestFavouriteNotice();
+        }
+      }
+
+      saveFavourites(favourites);
+    }
+
+    function showGuestFavouriteNotice() {
+      // Check if notice already shown
+      if (localStorage.getItem('guestFavNoticeShown')) return;
+
+      const notice = document.createElement('div');
+      notice.className = 'guest-fav-notice';
+      notice.innerHTML = `
+        <div class="guest-fav-notice-content">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <div>
+            <strong>Saved to this device</strong>
+            <p>Sign in to sync favourites across devices</p>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()">Got it</button>
+        </div>
+      `;
+      document.body.appendChild(notice);
+      localStorage.setItem('guestFavNoticeShown', 'true');
+
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        if (notice.parentElement) notice.remove();
+      }, 5000);
+    }
+
+    function loadFavouritesState() {
+      const favourites = getFavourites();
+      const cards = document.querySelectorAll('.venue-card');
+
+      cards.forEach(card => {
+        const venueId = card.dataset.id;
+        const btn = card.querySelector('.favourite-btn');
+        if (btn && favourites.some(f => f.id === venueId)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // Load favourites state on page load
+    loadFavouritesState();
+
+    // Profile/Login state management
+    function updateProfileButton() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const userName = localStorage.getItem('userName') || '';
+      const profileIcon = document.getElementById('profile-icon');
+      const profileAvatar = document.getElementById('profile-avatar');
+
+      if (isLoggedIn && userName) {
+        const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        profileAvatar.textContent = initials;
+        profileIcon.style.display = 'none';
+        profileAvatar.style.display = 'flex';
+      } else {
+        profileIcon.style.display = 'block';
+        profileAvatar.style.display = 'none';
+      }
+    }
+
+    function handleProfileClick() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      if (isLoggedIn) {
+        window.location.href = 'account.html';
+      } else {
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Initialize profile button on page load
+    updateProfileButton();
+
+    // Map functions
+    function initMap() {
+      if (map) return; // Already initialized
+
+      // Center on Shoreditch
+      map = L.map('map').setView([51.5255, -0.0825], 14);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add markers
+      updateMapMarkers();
+    }
+
+    function updateMapMarkers() {
+      if (!map) return;
+
+      // Clear existing markers
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      // Filter venues based on walk filter
+      const filteredVenues = walkFilterActive
+        ? venues.filter(v => v.walk <= 10)
+        : venues;
+
+      // Add markers for each venue
+      filteredVenues.forEach(venue => {
+        // Create custom price marker
+        const priceIcon = L.divIcon({
+          className: 'custom-marker-wrapper',
+          html: `<div class="custom-marker">£${venue.price}</div>`,
+          iconSize: [60, 30],
+          iconAnchor: [30, 30]
+        });
+
+        const marker = L.marker([venue.lat, venue.lng], { icon: priceIcon })
+          .addTo(map);
+
+        // Create popup content
+        const popupContent = `
+          <div class="map-popup">
+            <div class="map-popup-image" style="background: linear-gradient(135deg, #8B7355 0%, #D4A574 100%);"></div>
+            <div class="map-popup-name">${venue.name}</div>
+            <div class="map-popup-type">${venue.type}</div>
+            <div class="map-popup-meta">
+              <div class="map-popup-rating">
+                <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                ${venue.rating}
+              </div>
+              <div class="map-popup-price">£${venue.price}/hr</div>
+            </div>
+            <a href="venue.html" class="map-popup-btn">View Details</a>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, {
+          maxWidth: 250,
+          minWidth: 200
+        });
+
+        markers.push(marker);
+      });
+    }
+
+    function switchView(view) {
+      const listContainer = document.getElementById('list-container');
+      const mapContainer = document.getElementById('map-container');
+      const toggleBtns = document.querySelectorAll('.view-toggle-btn');
+
+      toggleBtns.forEach(btn => btn.classList.remove('active'));
+
+      if (view === 'map') {
+        listContainer.classList.add('hidden');
+        mapContainer.classList.add('active');
+        toggleBtns[1].classList.add('active');
+
+        // Initialize map on first view
+        setTimeout(() => {
+          initMap();
+          map.invalidateSize();
+        }, 100);
+      } else {
+        listContainer.classList.remove('hidden');
+        mapContainer.classList.remove('active');
+        toggleBtns[0].classList.add('active');
+      }
+    }
+
+    // Update map when filter changes
+    const originalFilterVenues = filterVenues;
+    filterVenues = function() {
+      originalFilterVenues();
+      if (map) {
+        updateMapMarkers();
+      }
+    };
+  </script>
+</body>
+</html>

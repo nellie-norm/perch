@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Roastery - Perch</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .venue-page {
+      padding: 0;
+      padding-bottom: 100px;
+    }
+
+    .venue-gallery {
+      position: relative;
+    }
+
+    .gallery-scroll {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      scroll-snap-type: x mandatory;
+    }
+
+    .gallery-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .gallery-item {
+      min-width: 100%;
+      height: 240px;
+      background: linear-gradient(135deg, #8B7355 0%, #D4A574 100%);
+      scroll-snap-align: start;
+      position: relative;
+    }
+
+    .gallery-item:nth-child(2) {
+      background: linear-gradient(135deg, #7D6B5D 0%, #A89080 100%);
+    }
+
+    .gallery-item:nth-child(3) {
+      background: linear-gradient(135deg, #6B7D5D 0%, #90A880 100%);
+    }
+
+    .gallery-nav {
+      position: absolute;
+      top: 16px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+    }
+
+    .gallery-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+
+    .gallery-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+    }
+
+    .gallery-dot.active {
+      background: white;
+      width: 18px;
+      border-radius: 3px;
+    }
+
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .favourite-btn.active svg {
+      color: #E53935;
+      fill: #E53935;
+    }
+
+    .venue-info {
+      padding: 20px 16px;
+      background: var(--card);
+      margin-top: -20px;
+      border-radius: 20px 20px 0 0;
+      position: relative;
+    }
+
+    .venue-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .venue-title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .venue-rating-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .venue-rating-badge svg {
+      color: var(--accent);
+    }
+
+    .venue-subtitle {
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    .venue-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .venue-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .venue-tag svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+    }
+
+    .section {
+      padding: 20px 16px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .amenity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+    }
+
+    .amenity-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .amenity-text {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .amenity-detail {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .time-slots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .time-slot {
+      padding: 14px 8px;
+      background: var(--bg);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .time-slot:hover {
+      border-color: var(--primary-light);
+    }
+
+    .time-slot.selected {
+      background: var(--primary);
+      color: white;
+    }
+
+    .time-slot.unavailable {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .slot-time {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .slot-price {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    .reviews-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .review-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .review-item:last-child {
+      border-bottom: none;
+    }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .review-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .review-meta {
+      flex: 1;
+    }
+
+    .review-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .review-date {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    .review-stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    .review-stars svg {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+    }
+
+    .review-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 375px;
+      margin: 0 auto;
+      background: var(--card);
+      padding: 16px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .bottom-price {
+      text-align: left;
+    }
+
+    .bottom-price-amount {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .bottom-price-unit {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .book-btn {
+      flex: 1;
+      padding: 16px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .book-btn:active {
+      background: var(--primary-dark);
+    }
+
+    /* Responsive styles */
+    .venue-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .venue-page {
+        padding-bottom: 120px;
+      }
+
+      .gallery-item {
+        height: 360px;
+      }
+
+      .venue-info {
+        padding: 32px;
+      }
+
+      .venue-title {
+        font-size: 32px;
+      }
+
+      .venue-subtitle {
+        font-size: 17px;
+      }
+
+      .section {
+        padding: 32px;
+      }
+
+      .section-title {
+        font-size: 20px;
+      }
+
+      .amenities-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .time-slots-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .reviews-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+      }
+
+      .review-item {
+        border-bottom: none;
+        padding: 20px;
+        background: var(--bg);
+        border-radius: var(--radius);
+      }
+
+      .bottom-bar {
+        max-width: 100%;
+        padding: 20px 32px;
+      }
+
+      .book-btn {
+        max-width: 300px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .venue-page {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .gallery-item {
+        height: 450px;
+        min-width: 50%;
+      }
+
+      .venue-content-wrapper {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 48px;
+      }
+
+      .venue-info {
+        margin-top: -40px;
+        border-radius: 20px;
+      }
+
+      .section {
+        padding: 32px 48px;
+      }
+
+      .amenities-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .bottom-bar {
+        padding: 24px 48px;
+      }
+
+      .bottom-price-amount {
+        font-size: 26px;
+      }
+
+      .book-btn {
+        padding: 18px 32px;
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page venue-page">
+    <div class="venue-gallery">
+      <div class="gallery-nav">
+        <button class="nav-btn" onclick="window.location.href='results.html'">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button class="nav-btn favourite-btn" id="favourite-btn" onclick="toggleFavourite()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="gallery-scroll">
+        <div class="gallery-item"></div>
+        <div class="gallery-item"></div>
+        <div class="gallery-item"></div>
+      </div>
+      <div class="gallery-dots">
+        <div class="gallery-dot active"></div>
+        <div class="gallery-dot"></div>
+        <div class="gallery-dot"></div>
+      </div>
+    </div>
+
+    <div class="venue-info animate-in">
+      <div class="venue-title-row">
+        <h1 class="venue-title">Allpress Espresso</h1>
+        <div class="venue-rating-badge">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          4.8
+        </div>
+      </div>
+      <p class="venue-subtitle">Coffee Roasters · Shoreditch · 4 min walk</p>
+
+      <div class="venue-tags">
+        <span class="venue-tag" style="background: #E3F2E8; color: #1B7340;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <circle cx="12" cy="20" r="1"/>
+          </svg>
+          Fast WiFi · Great for calls
+        </span>
+        <span class="venue-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Off-peak: 2-5 PM
+        </span>
+        <span class="venue-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          14 seats
+        </span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Amenities</h2>
+      <div class="amenities-grid">
+        <div class="amenity-item">
+          <div class="amenity-icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1"/>
+            </svg>
+          </div>
+          <div>
+            <div class="amenity-text">Fast WiFi</div>
+            <div class="amenity-detail">120 Mbps</div>
+          </div>
+        </div>
+        <div class="amenity-item">
+          <div class="amenity-icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+              <line x1="12" y1="2" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="amenity-text">Power Outlets</div>
+            <div class="amenity-detail">At every seat</div>
+          </div>
+        </div>
+        <div class="amenity-item">
+          <div class="amenity-icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="amenity-text">Coffee & Tea</div>
+            <div class="amenity-detail">Included</div>
+          </div>
+        </div>
+        <div class="amenity-item">
+          <div class="amenity-icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="amenity-text">Lockers</div>
+            <div class="amenity-detail">Free to use</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Available Time Slots</h2>
+      <div class="time-slots-grid" id="time-slots">
+        <div class="time-slot" onclick="selectSlot(this)">
+          <div class="slot-time">2:00 PM</div>
+          <div class="slot-price">£7</div>
+        </div>
+        <div class="time-slot selected" onclick="selectSlot(this)">
+          <div class="slot-time">2:30 PM</div>
+          <div class="slot-price">£7</div>
+        </div>
+        <div class="time-slot" onclick="selectSlot(this)">
+          <div class="slot-time">3:00 PM</div>
+          <div class="slot-price">£7</div>
+        </div>
+        <div class="time-slot" onclick="selectSlot(this)">
+          <div class="slot-time">3:30 PM</div>
+          <div class="slot-price">£7</div>
+        </div>
+        <div class="time-slot unavailable">
+          <div class="slot-time">4:00 PM</div>
+          <div class="slot-price">Full</div>
+        </div>
+        <div class="time-slot" onclick="selectSlot(this)">
+          <div class="slot-time">4:30 PM</div>
+          <div class="slot-price">£7</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Reviews</h2>
+      <div class="reviews-list">
+        <div class="review-item">
+          <div class="review-header">
+            <div class="review-avatar">JM</div>
+            <div class="review-meta">
+              <div class="review-name">Jessica M.</div>
+              <div class="review-date">2 weeks ago</div>
+            </div>
+            <div class="review-stars">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+          <p class="review-text">Perfect spot for remote work! The WiFi is lightning fast and the coffee is excellent. Love the cozy atmosphere during off-peak hours.</p>
+        </div>
+
+        <div class="review-item">
+          <div class="review-header">
+            <div class="review-avatar">AT</div>
+            <div class="review-meta">
+              <div class="review-name">Alex T.</div>
+              <div class="review-date">1 month ago</div>
+            </div>
+            <div class="review-stars">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+          <p class="review-text">Great for video calls - quiet enough in the afternoon and the outlets are super convenient. Only wish they had more seating options.</p>
+        </div>
+
+        <div class="review-item">
+          <div class="review-header">
+            <div class="review-avatar">SK</div>
+            <div class="review-meta">
+              <div class="review-name">Sarah K.</div>
+              <div class="review-date">1 month ago</div>
+            </div>
+            <div class="review-stars">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+          <p class="review-text">My go-to workspace! The staff is friendly and the free coffee refills are a nice perk. Highly recommend the afternoon slots.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="bottom-price">
+        <span class="bottom-price-amount">£7</span>
+        <span class="bottom-price-unit">/hour</span>
+      </div>
+      <button class="book-btn" onclick="window.location.href='booking.html'">Book Now</button>
+    </div>
+  </div>
+
+  <script>
+    function selectSlot(el) {
+      if (el.classList.contains('unavailable')) return;
+      document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    // Venue data for this page
+    const venueId = 'allpress';
+    const venueName = 'Allpress Espresso';
+
+    // Favourites functionality
+    function getFavourites() {
+      const favourites = localStorage.getItem('favourites');
+      return favourites ? JSON.parse(favourites) : [];
+    }
+
+    function saveFavourites(favourites) {
+      localStorage.setItem('favourites', JSON.stringify(favourites));
+    }
+
+    function toggleFavourite() {
+      const btn = document.getElementById('favourite-btn');
+      const favourites = getFavourites();
+      const index = favourites.findIndex(f => f.id === venueId);
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+      if (index > -1) {
+        favourites.splice(index, 1);
+        btn.classList.remove('active');
+      } else {
+        favourites.push({
+          id: venueId,
+          name: venueName,
+          addedAt: new Date().toISOString()
+        });
+        btn.classList.add('active');
+
+        // Show notice for guests on first favourite
+        if (!isLoggedIn && favourites.length === 1) {
+          showGuestFavouriteNotice();
+        }
+      }
+
+      saveFavourites(favourites);
+    }
+
+    function showGuestFavouriteNotice() {
+      if (localStorage.getItem('guestFavNoticeShown')) return;
+
+      const notice = document.createElement('div');
+      notice.style.cssText = `
+        position: fixed;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        animation: slideUp 0.3s ease;
+      `;
+      notice.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: #1a1a1a; color: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+          <svg viewBox="0 0 24 24" fill="#E53935" stroke="#E53935" stroke-width="2" style="width: 24px; height: 24px;">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <div>
+            <strong style="display: block; font-size: 14px;">Saved to this device</strong>
+            <p style="font-size: 12px; opacity: 0.8; margin: 0;">Sign in to sync favourites</p>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" style="padding: 8px 14px; background: rgba(255,255,255,0.15); border: none; border-radius: 6px; color: white; font-size: 13px; cursor: pointer;">Got it</button>
+        </div>
+      `;
+      document.body.appendChild(notice);
+      localStorage.setItem('guestFavNoticeShown', 'true');
+      setTimeout(() => { if (notice.parentElement) notice.remove(); }, 5000);
+    }
+
+    function loadFavouriteState() {
+      const favourites = getFavourites();
+      const btn = document.getElementById('favourite-btn');
+      if (favourites.some(f => f.id === venueId)) {
+        btn.classList.add('active');
+      }
+    }
+
+    // Initialize favourite state
+    loadFavouriteState();
+  </script>
+</body>
+</html>
