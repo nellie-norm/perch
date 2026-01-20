@@ -644,6 +644,26 @@
         </div>
       </div>
 
+      <!-- Booking History -->
+      <div class="section animate-in">
+        <div class="section-header">
+          <h3 class="section-title">Booking History</h3>
+        </div>
+
+        <div id="history-list">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="empty-state" id="empty-history" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <h3>No past bookings</h3>
+          <p>Your completed bookings will appear here</p>
+        </div>
+      </div>
+
       <!-- Favourites -->
       <div class="section animate-in">
         <div class="section-header">
@@ -834,58 +854,88 @@
 
     // Load bookings from Firestore
     async function loadBookings() {
-      const bookingsList = document.getElementById('bookings-list');
-      const emptyState = document.getElementById('empty-bookings');
+      const upcomingList = document.getElementById('bookings-list');
+      const upcomingEmpty = document.getElementById('empty-bookings');
+      const historyList = document.getElementById('history-list');
+      const historyEmpty = document.getElementById('empty-history');
 
       if (!currentUser) {
-        bookingsList.style.display = 'none';
-        emptyState.style.display = 'block';
+        upcomingList.style.display = 'none';
+        upcomingEmpty.style.display = 'block';
+        historyList.style.display = 'none';
+        historyEmpty.style.display = 'block';
         return;
       }
 
       try {
         const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'bookings'));
-        const bookings = [];
+        const allBookings = [];
         querySnapshot.forEach((doc) => {
-          bookings.push({ id: doc.id, ...doc.data() });
+          allBookings.push({ id: doc.id, ...doc.data() });
         });
 
-        // Sort by date (most recent first)
-        bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        // Split into upcoming and past based on date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        if (bookings.length === 0) {
-          bookingsList.style.display = 'none';
-          emptyState.style.display = 'block';
-          return;
+        const upcoming = allBookings.filter(b => new Date(b.date) >= today);
+        const past = allBookings.filter(b => new Date(b.date) < today);
+
+        // Sort upcoming by date (soonest first)
+        upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+        // Sort past by date (most recent first)
+        past.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Render upcoming bookings
+        if (upcoming.length === 0) {
+          upcomingList.style.display = 'none';
+          upcomingEmpty.style.display = 'block';
+        } else {
+          upcomingList.style.display = 'block';
+          upcomingEmpty.style.display = 'none';
+          upcomingList.innerHTML = '';
+          upcoming.forEach(booking => renderBookingCard(booking, upcomingList));
         }
 
-        bookingsList.style.display = 'block';
-        emptyState.style.display = 'none';
-        bookingsList.innerHTML = '';
-
-        bookings.forEach(booking => {
-          const gradient = booking.venue?.gradient || defaultGradients[booking.venue?.id] || 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)';
-          const card = document.createElement('div');
-          card.className = 'booking-card';
-          card.innerHTML = `
-            <div class="booking-image" style="background: ${gradient};"></div>
-            <div class="booking-details">
-              <div class="booking-venue">${booking.venue?.name || 'Workspace'}</div>
-              <div class="booking-datetime">${formatBookingDate(booking.date)} · ${booking.time} · ${booking.duration}hr</div>
-              <span class="booking-ref">${booking.reference}</span>
-            </div>
-          `;
-          card.onclick = () => {
-            localStorage.setItem('lastBookingRef', booking.reference);
-            window.location.href = 'confirmation.html';
-          };
-          bookingsList.appendChild(card);
-        });
+        // Render past bookings
+        if (past.length === 0) {
+          historyList.style.display = 'none';
+          historyEmpty.style.display = 'block';
+        } else {
+          historyList.style.display = 'block';
+          historyEmpty.style.display = 'none';
+          historyList.innerHTML = '';
+          past.forEach(booking => renderBookingCard(booking, historyList, true));
+        }
       } catch (error) {
         console.error('Error loading bookings:', error);
-        bookingsList.style.display = 'none';
-        emptyState.style.display = 'block';
+        upcomingList.style.display = 'none';
+        upcomingEmpty.style.display = 'block';
+        historyList.style.display = 'none';
+        historyEmpty.style.display = 'block';
       }
+    }
+
+    // Render a booking card
+    function renderBookingCard(booking, container, isPast = false) {
+      const gradient = booking.venue?.gradient || defaultGradients[booking.venue?.id] || 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)';
+      const card = document.createElement('div');
+      card.className = 'booking-card';
+      if (isPast) card.style.opacity = '0.7';
+
+      card.innerHTML = `
+        <div class="booking-image" style="background: ${gradient};"></div>
+        <div class="booking-details">
+          <div class="booking-venue">${booking.venue?.name || 'Workspace'}</div>
+          <div class="booking-datetime">${formatBookingDate(booking.date)} · ${booking.time} · ${booking.duration}hr</div>
+          <span class="booking-ref">${booking.reference}</span>
+        </div>
+      `;
+      card.onclick = () => {
+        localStorage.setItem('lastBookingRef', booking.reference);
+        window.location.href = 'confirmation.html';
+      };
+      container.appendChild(card);
     }
 
     // Load user data
