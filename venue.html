@@ -602,27 +602,27 @@
       <div class="time-slots-grid" id="time-slots">
         <div class="time-slot" onclick="selectSlot(this)">
           <div class="slot-time">2:00 PM</div>
-          <div class="slot-price">£7</div>
+          <div class="slot-price">-- seats</div>
         </div>
         <div class="time-slot selected" onclick="selectSlot(this)">
           <div class="slot-time">2:30 PM</div>
-          <div class="slot-price">£7</div>
+          <div class="slot-price">-- seats</div>
         </div>
         <div class="time-slot" onclick="selectSlot(this)">
           <div class="slot-time">3:00 PM</div>
-          <div class="slot-price">£7</div>
+          <div class="slot-price">-- seats</div>
         </div>
         <div class="time-slot" onclick="selectSlot(this)">
           <div class="slot-time">3:30 PM</div>
-          <div class="slot-price">£7</div>
+          <div class="slot-price">-- seats</div>
         </div>
-        <div class="time-slot unavailable">
+        <div class="time-slot" onclick="selectSlot(this)">
           <div class="slot-time">4:00 PM</div>
-          <div class="slot-price">Full</div>
+          <div class="slot-price">-- seats</div>
         </div>
         <div class="time-slot" onclick="selectSlot(this)">
           <div class="slot-time">4:30 PM</div>
-          <div class="slot-price">£7</div>
+          <div class="slot-price">-- seats</div>
         </div>
       </div>
     </div>
@@ -888,35 +888,52 @@
       const timeSlots = document.querySelectorAll('.time-slot');
 
       for (const slot of timeSlots) {
+        // Skip already unavailable slots (hardcoded ones)
+        if (slot.classList.contains('unavailable') && !slot.dataset.checkedAvailability) continue;
+
         const timeEl = slot.querySelector('.slot-time');
         if (!timeEl) continue;
 
-        const time = timeEl.textContent;
+        const time = timeEl.textContent.trim();
         const slotDocId = `${venueId}_${dateStr}_${time.replace(/[: ]/g, '')}`;
 
         try {
           const slotDoc = await getDoc(doc(db, 'availability', slotDocId));
+          const priceEl = slot.querySelector('.slot-price');
 
           if (slotDoc.exists()) {
             const data = slotDoc.data();
             const bookedSeats = data.bookedSeats || 0;
             const remainingSeats = totalSeats - bookedSeats;
 
-            const priceEl = slot.querySelector('.slot-price');
+            slot.dataset.checkedAvailability = 'true';
 
             if (remainingSeats <= 0) {
               // Slot is full
               slot.classList.add('unavailable');
-              slot.onclick = null;
+              slot.removeAttribute('onclick');
               if (priceEl) priceEl.textContent = 'Full';
-            } else if (remainingSeats <= 3) {
-              // Almost full - show remaining seats
-              if (priceEl) priceEl.textContent = `${remainingSeats} left`;
-              priceEl.style.color = '#E65100';
+            } else if (remainingSeats <= 5) {
+              // Getting low - show remaining seats in orange
+              if (priceEl) {
+                priceEl.textContent = `${remainingSeats} left`;
+                priceEl.style.color = '#E65100';
+              }
+            } else {
+              // Show remaining seats
+              if (priceEl) {
+                priceEl.textContent = `${remainingSeats} seats`;
+                priceEl.style.color = '';
+              }
+            }
+          } else {
+            // No bookings yet - show all seats available
+            if (priceEl && !slot.classList.contains('unavailable')) {
+              priceEl.textContent = `${totalSeats} seats`;
             }
           }
         } catch (error) {
-          console.error('Error loading slot availability:', error);
+          console.error('Error loading slot availability for', time, error);
         }
       }
     }

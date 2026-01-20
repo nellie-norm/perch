@@ -822,7 +822,7 @@
         }
 
         // Update slot availability
-        const slotDocId = `${venueData.id}_${dateStr}_${bookingTime.replace(/[: ]/g, '')}`;
+        const slotDocId = `${venueData.id}_${dateStr}_${bookingTime.trim().replace(/[: ]/g, '')}`;
         const slotRef = doc(db, 'availability', slotDocId);
         const slotDoc = await getDoc(slotRef);
 
