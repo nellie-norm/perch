@@ -853,9 +853,9 @@
       window.location.href = 'booking.html';
     }
 
-    // Firebase Firestore for favourites
+    // Firebase Firestore for favourites and availability
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -878,6 +878,51 @@
       currentUser = user;
       loadFavouriteState();
     });
+
+    // Load slot availability from Firestore
+    async function loadSlotAvailability() {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const totalSeats = venue.seats || 14;
+
+      const timeSlots = document.querySelectorAll('.time-slot');
+
+      for (const slot of timeSlots) {
+        const timeEl = slot.querySelector('.slot-time');
+        if (!timeEl) continue;
+
+        const time = timeEl.textContent;
+        const slotDocId = `${venueId}_${dateStr}_${time.replace(/[: ]/g, '')}`;
+
+        try {
+          const slotDoc = await getDoc(doc(db, 'availability', slotDocId));
+
+          if (slotDoc.exists()) {
+            const data = slotDoc.data();
+            const bookedSeats = data.bookedSeats || 0;
+            const remainingSeats = totalSeats - bookedSeats;
+
+            const priceEl = slot.querySelector('.slot-price');
+
+            if (remainingSeats <= 0) {
+              // Slot is full
+              slot.classList.add('unavailable');
+              slot.onclick = null;
+              if (priceEl) priceEl.textContent = 'Full';
+            } else if (remainingSeats <= 3) {
+              // Almost full - show remaining seats
+              if (priceEl) priceEl.textContent = `${remainingSeats} left`;
+              priceEl.style.color = '#E65100';
+            }
+          }
+        } catch (error) {
+          console.error('Error loading slot availability:', error);
+        }
+      }
+    }
+
+    // Load availability on page load
+    loadSlotAvailability();
 
     // Favourites functionality with Firestore
     async function getFavourites() {

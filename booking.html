@@ -719,7 +719,7 @@
     </div>
 
     <div class="bottom-bar">
-      <button class="confirm-btn" onclick="window.location.href='confirmation.html'">
+      <button class="confirm-btn" onclick="saveBooking()">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -735,16 +735,135 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    // Firebase Firestore for bookings
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
+      authDomain: "perch-96206.firebaseapp.com",
+      projectId: "perch-96206",
+      storageBucket: "perch-96206.firebasestorage.app",
+      messagingSenderId: "666435496292",
+      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+    let selectedDuration = 2;
+    let totalPrice = 16.79;
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+    });
+
+    // Generate unique booking reference
+    function generateBookingRef() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let ref = 'PRCH-';
+      for (let i = 0; i < 6; i++) {
+        ref += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return ref;
+    }
+
+    // Save booking to Firestore
+    async function saveBooking() {
+      const venueData = JSON.parse(localStorage.getItem('currentVenue') || '{}');
+      const bookingTime = localStorage.getItem('bookingTime') || '2:30 PM';
+      const bookingRef = generateBookingRef();
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+
+      // Get user info
+      let userName, userEmail;
+      if (currentUser) {
+        userName = currentUser.displayName || localStorage.getItem('userName') || 'Guest';
+        userEmail = currentUser.email || localStorage.getItem('userEmail');
+      } else {
+        userName = document.getElementById('guest-name')?.value || 'Guest';
+        userEmail = document.getElementById('guest-email')?.value || '';
+      }
+
+      const booking = {
+        reference: bookingRef,
+        venue: {
+          id: venueData.id,
+          name: venueData.name,
+          address: venueData.address,
+          phone: venueData.phone,
+          gradient: venueData.gradient
+        },
+        date: dateStr,
+        time: bookingTime,
+        duration: selectedDuration,
+        totalPrice: totalPrice,
+        user: {
+          name: userName,
+          email: userEmail,
+          uid: currentUser?.uid || null
+        },
+        status: 'confirmed',
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        // Save booking
+        await setDoc(doc(db, 'bookings', bookingRef), booking);
+
+        // Also save to user's bookings if logged in
+        if (currentUser) {
+          await setDoc(doc(db, 'users', currentUser.uid, 'bookings', bookingRef), booking);
+        }
+
+        // Update slot availability
+        const slotDocId = `${venueData.id}_${dateStr}_${bookingTime.replace(/[: ]/g, '')}`;
+        const slotRef = doc(db, 'availability', slotDocId);
+        const slotDoc = await getDoc(slotRef);
+
+        if (slotDoc.exists()) {
+          await updateDoc(slotRef, {
+            bookedSeats: increment(1)
+          });
+        } else {
+          // Initialize slot with first booking
+          await setDoc(slotRef, {
+            venueId: venueData.id,
+            date: dateStr,
+            time: bookingTime,
+            totalSeats: venueData.seats || 14,
+            bookedSeats: 1
+          });
+        }
+
+        // Store booking ref for confirmation page
+        localStorage.setItem('lastBookingRef', bookingRef);
+
+        // Navigate to confirmation
+        window.location.href = 'confirmation.html';
+      } catch (error) {
+        console.error('Error saving booking:', error);
+        alert('There was an error processing your booking. Please try again.');
+      }
+    }
+
     function selectDuration(el, hours) {
       document.querySelectorAll('.duration-option').forEach(d => d.classList.remove('selected'));
       el.classList.add('selected');
+      selectedDuration = hours;
+
       // Update price display using venue price
       const pricePerHour = window.venuePrice || 7;
       const basePrice = pricePerHour * hours;
       const serviceFee = 1.50;
       const tax = (basePrice + serviceFee) * 0.077; // UK VAT simplified
       const total = basePrice + serviceFee + tax;
+      totalPrice = total;
 
       document.querySelector('.price-row:nth-child(1) .label').textContent = `Workspace (${hours} hour${hours > 1 ? 's' : ''})`;
       document.querySelector('.price-row:nth-child(1) span:last-child').textContent = `£${basePrice.toFixed(2)}`;
@@ -809,6 +928,11 @@
     }
 
     loadBookingData();
+
+    // Expose functions to window for onclick handlers
+    window.selectDuration = selectDuration;
+    window.selectPayment = selectPayment;
+    window.saveBooking = saveBooking;
   </script>
 </body>
 </html>

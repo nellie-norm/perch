@@ -483,9 +483,89 @@
     </div>
   </div>
 
-  <script>
-    // Load venue data from localStorage
-    function loadConfirmationData() {
+  <script type="module">
+    // Firebase Firestore for bookings
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
+      authDomain: "perch-96206.firebaseapp.com",
+      projectId: "perch-96206",
+      storageBucket: "perch-96206.firebasestorage.app",
+      messagingSenderId: "666435496292",
+      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Format date nicely
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const today = new Date();
+      const isToday = date.toDateString() === today.toDateString();
+      return isToday ? `Today, ${date.toLocaleDateString('en-GB', { month: 'long', day: 'numeric', year: 'numeric' })}` : date.toLocaleDateString('en-GB', options);
+    }
+
+    // Calculate end time
+    function calculateEndTime(startTime, durationHours) {
+      const [time, period] = startTime.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+
+      hours += durationHours;
+      const endPeriod = hours >= 12 ? 'PM' : 'AM';
+      if (hours > 12) hours -= 12;
+      if (hours === 0) hours = 12;
+
+      return `${hours}:${minutes.toString().padStart(2, '0')} ${endPeriod}`;
+    }
+
+    // Load booking data from Firestore
+    async function loadConfirmationData() {
+      const bookingRef = localStorage.getItem('lastBookingRef');
+
+      if (bookingRef) {
+        try {
+          const bookingDoc = await getDoc(doc(db, 'bookings', bookingRef));
+
+          if (bookingDoc.exists()) {
+            const booking = bookingDoc.data();
+
+            // Update booking reference
+            document.querySelector('.booking-reference-code').textContent = booking.reference;
+
+            // Update venue details
+            document.getElementById('confirm-venue-name').textContent = booking.venue.name;
+            document.getElementById('confirm-venue-address').textContent = booking.venue.address;
+            document.getElementById('venue-phone').textContent = booking.venue.phone;
+
+            // Update date and time
+            const dateEl = document.querySelector('.detail-row:nth-child(2) .detail-value');
+            const timeEl = document.querySelector('.detail-row:nth-child(2) .detail-value:nth-child(2)');
+
+            dateEl.textContent = formatDate(booking.date);
+
+            const endTime = calculateEndTime(booking.time, booking.duration);
+            const durationText = `${booking.time} - ${endTime} (${booking.duration} hour${booking.duration > 1 ? 's' : ''})`;
+            dateEl.nextElementSibling.textContent = durationText;
+
+            // Update payment
+            const paymentEl = document.querySelector('.detail-row:nth-child(3) .detail-value');
+            paymentEl.textContent = `£${booking.totalPrice.toFixed(2)} paid`;
+
+            return;
+          }
+        } catch (error) {
+          console.error('Error loading booking:', error);
+        }
+      }
+
+      // Fallback to localStorage if no Firestore booking found
       const venueData = localStorage.getItem('currentVenue');
       const bookingTime = localStorage.getItem('bookingTime') || '2:30 PM';
 
