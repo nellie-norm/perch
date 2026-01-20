@@ -720,6 +720,89 @@
         min-height: 600px;
       }
     }
+
+    /* User location marker */
+    .user-location-marker {
+      position: relative;
+    }
+
+    .user-marker-dot {
+      width: 16px;
+      height: 16px;
+      background: #4285F4;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    .user-marker-pulse {
+      width: 40px;
+      height: 40px;
+      background: rgba(66, 133, 244, 0.2);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 2s ease-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* Location banner */
+    .location-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #E3F2FD;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #1565C0;
+    }
+
+    .location-banner svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .location-banner.no-location {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .location-banner button {
+      margin-left: auto;
+      padding: 6px 12px;
+      background: #1565C0;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .location-banner.no-location button {
+      background: #E65100;
+    }
   </style>
 </head>
 <body>
@@ -744,9 +827,18 @@
       </div>
 
       <div class="search-summary animate-in">
-        <p class="search-summary-text">
+        <p class="search-summary-text" id="search-summary">
           <strong>Shoreditch, London</strong> · Today, 2:00 PM · 2 hours
         </p>
+      </div>
+
+      <div class="location-banner animate-in" id="location-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        </svg>
+        <span id="location-status">Using your location for distances</span>
+        <button id="location-btn" onclick="requestLocation()" style="display:none;">Share Location</button>
       </div>
 
       <div class="filter-bar animate-in">
@@ -1130,16 +1222,89 @@
   <script>
     // Venue data with coordinates (Shoreditch/East London area)
     const venues = [
-      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, walk: 4, wifi: 'fast' },
-      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, walk: 7, wifi: 'fast' },
-      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, walk: 5, wifi: 'fine' },
-      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, walk: 9, wifi: 'fast' },
-      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, walk: 14, wifi: 'fast' },
-      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, walk: 18, wifi: 'fine' }
+      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast' },
+      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast' },
+      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine' },
+      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast' },
+      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast' },
+      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine' }
     ];
 
     let map = null;
     let markers = [];
+    let userMarker = null;
+
+    // Get user location from localStorage
+    let userLat = parseFloat(localStorage.getItem('userLat'));
+    let userLng = parseFloat(localStorage.getItem('userLng'));
+
+    // Haversine formula to calculate distance between two points
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    }
+
+    // Convert distance to walking time (average walking speed: 5 km/h)
+    function distanceToWalkTime(distanceKm) {
+      return Math.round(distanceKm / 5 * 60); // Minutes
+    }
+
+    // Calculate walk times for all venues based on user location
+    function calculateWalkTimes() {
+      if (!userLat || !userLng) {
+        // If no user location, use default Shoreditch center
+        userLat = 51.5255;
+        userLng = -0.0825;
+      }
+
+      venues.forEach(venue => {
+        const distance = calculateDistance(userLat, userLng, venue.lat, venue.lng);
+        venue.walk = distanceToWalkTime(distance);
+        venue.distance = distance;
+      });
+
+      // Sort venues by walk time
+      venues.sort((a, b) => a.walk - b.walk);
+    }
+
+    // Update venue cards with calculated walk times
+    function updateVenueCards() {
+      const cards = document.querySelectorAll('.venue-card');
+      cards.forEach(card => {
+        const venueId = card.dataset.id;
+        const venue = venues.find(v => v.id === venueId);
+        if (venue) {
+          card.dataset.walk = venue.walk;
+
+          // Update walk time display
+          const walkTimeEl = card.querySelector('.walk-time');
+          if (walkTimeEl) {
+            walkTimeEl.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+              </svg>
+              ${venue.walk} min walk
+            `;
+            // Update nearby class
+            if (venue.walk <= 10) {
+              walkTimeEl.classList.add('nearby');
+            } else {
+              walkTimeEl.classList.remove('nearby');
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize with calculated distances
+    calculateWalkTimes();
+    updateVenueCards();
 
     // Walk time filter
     let walkFilterActive = true;
@@ -1296,13 +1461,27 @@
     function initMap() {
       if (map) return; // Already initialized
 
-      // Center on Shoreditch
-      map = L.map('map').setView([51.5255, -0.0825], 14);
+      // Center on user location or Shoreditch
+      map = L.map('map').setView([userLat, userLng], 14);
 
       // Add OpenStreetMap tiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
+
+      // Add user location marker
+      if (userLat && userLng) {
+        const userIcon = L.divIcon({
+          className: 'user-location-marker',
+          html: `<div class="user-marker-dot"></div><div class="user-marker-pulse"></div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        userMarker = L.marker([userLat, userLng], { icon: userIcon })
+          .addTo(map)
+          .bindPopup('<strong>You are here</strong>');
+      }
 
       // Add markers
       updateMapMarkers();
@@ -1399,6 +1578,88 @@
         updateMapMarkers();
       }
     };
+
+    // Location banner management
+    function updateLocationBanner() {
+      const banner = document.getElementById('location-banner');
+      const status = document.getElementById('location-status');
+      const btn = document.getElementById('location-btn');
+      const hasLocation = localStorage.getItem('userLat') && localStorage.getItem('userLng');
+
+      if (hasLocation) {
+        banner.classList.remove('no-location');
+        status.textContent = 'Using your location for distances';
+        btn.style.display = 'none';
+      } else {
+        banner.classList.add('no-location');
+        status.textContent = 'Share location for accurate distances';
+        btn.style.display = 'block';
+      }
+    }
+
+    // Request user location
+    function requestLocation() {
+      const btn = document.getElementById('location-btn');
+      btn.textContent = 'Finding...';
+      btn.disabled = true;
+
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            userLat = position.coords.latitude;
+            userLng = position.coords.longitude;
+            localStorage.setItem('userLat', userLat);
+            localStorage.setItem('userLng', userLng);
+
+            // Recalculate distances
+            calculateWalkTimes();
+            updateVenueCards();
+            filterVenues();
+
+            // Update banner
+            updateLocationBanner();
+
+            // Update map if visible
+            if (map) {
+              map.setView([userLat, userLng], 14);
+
+              // Add or update user marker
+              if (userMarker) {
+                userMarker.setLatLng([userLat, userLng]);
+              } else {
+                const userIcon = L.divIcon({
+                  className: 'user-location-marker',
+                  html: `<div class="user-marker-dot"></div><div class="user-marker-pulse"></div>`,
+                  iconSize: [24, 24],
+                  iconAnchor: [12, 12]
+                });
+
+                userMarker = L.marker([userLat, userLng], { icon: userIcon })
+                  .addTo(map)
+                  .bindPopup('<strong>You are here</strong>');
+              }
+              updateMapMarkers();
+            }
+
+            btn.textContent = 'Share Location';
+            btn.disabled = false;
+          },
+          (error) => {
+            alert('Unable to get location. Please try again.');
+            btn.textContent = 'Share Location';
+            btn.disabled = false;
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        alert('Geolocation is not supported by your browser.');
+        btn.textContent = 'Share Location';
+        btn.disabled = false;
+      }
+    }
+
+    // Initialize location banner
+    updateLocationBanner();
   </script>
 </body>
 </html>
