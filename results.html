@@ -1219,7 +1219,33 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  <script>
+  <script type="module">
+    // Firebase Firestore for favourites
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
+      authDomain: "perch-96206.firebaseapp.com",
+      projectId: "perch-96206",
+      storageBucket: "perch-96206.firebasestorage.app",
+      messagingSenderId: "666435496292",
+      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    // Listen for auth state changes
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      loadFavouritesState();
+    });
+
     // Venue data with coordinates (Shoreditch/East London area)
     const venues = [
       { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast' },
@@ -1344,44 +1370,96 @@
     // Initial filter
     filterVenues();
 
-    // Favourites functionality
-    function getFavourites() {
-      const favourites = localStorage.getItem('favourites');
-      return favourites ? JSON.parse(favourites) : [];
+    // Venue gradients for favourites
+    const venueGradients = {
+      allpress: 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)',
+      ozone: 'linear-gradient(135deg, #5D6D7E 0%, #85929E 100%)',
+      hoxton: 'linear-gradient(135deg, #7D6B5D 0%, #A89080 100%)',
+      lookmum: 'linear-gradient(135deg, #6B7D5D 0%, #90A880 100%)',
+      caravan: 'linear-gradient(135deg, #5D7D8E 0%, #7DA0B0 100%)',
+      attendant: 'linear-gradient(135deg, #8D6D7E 0%, #A08090 100%)'
+    };
+
+    // Favourites functionality with Firestore
+    async function getFavourites() {
+      if (currentUser) {
+        try {
+          const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'favourites'));
+          const favourites = [];
+          querySnapshot.forEach((doc) => {
+            favourites.push({ id: doc.id, ...doc.data() });
+          });
+          return favourites;
+        } catch (error) {
+          console.error('Error getting favourites:', error);
+          return [];
+        }
+      } else {
+        const favourites = localStorage.getItem('favourites');
+        return favourites ? JSON.parse(favourites) : [];
+      }
     }
 
-    function saveFavourites(favourites) {
-      localStorage.setItem('favourites', JSON.stringify(favourites));
+    async function addFavourite(favData) {
+      if (currentUser) {
+        try {
+          await setDoc(doc(db, 'users', currentUser.uid, 'favourites', favData.id), favData);
+        } catch (error) {
+          console.error('Error adding favourite:', error);
+        }
+      } else {
+        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+        favourites.push(favData);
+        localStorage.setItem('favourites', JSON.stringify(favourites));
+      }
     }
 
-    function toggleFavourite(event, venueId, venueName) {
+    async function removeFavouriteFromDB(venueId) {
+      if (currentUser) {
+        try {
+          await deleteDoc(doc(db, 'users', currentUser.uid, 'favourites', venueId));
+        } catch (error) {
+          console.error('Error removing favourite:', error);
+        }
+      } else {
+        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+        const index = favourites.findIndex(f => f.id === venueId);
+        if (index > -1) {
+          favourites.splice(index, 1);
+          localStorage.setItem('favourites', JSON.stringify(favourites));
+        }
+      }
+    }
+
+    async function toggleFavourite(event, venueId, venueName) {
       event.stopPropagation(); // Prevent card click
 
       const btn = event.currentTarget;
-      const favourites = getFavourites();
-      const index = favourites.findIndex(f => f.id === venueId);
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const favourites = await getFavourites();
+      const isFavourited = favourites.some(f => f.id === venueId);
+      const venue = venues.find(v => v.id === venueId);
 
-      if (index > -1) {
-        // Remove from favourites
-        favourites.splice(index, 1);
+      if (isFavourited) {
+        await removeFavouriteFromDB(venueId);
         btn.classList.remove('active');
       } else {
-        // Add to favourites
-        favourites.push({
+        const area = venue ? venue.type.split(' · ')[1] || venue.type.split('·')[1]?.trim() : '';
+        const favData = {
           id: venueId,
           name: venueName,
+          area: area || (venue ? venue.type : ''),
+          type: venue ? venue.type.split(' · ')[0] || venue.type.split('·')[0]?.trim() : '',
+          gradient: venueGradients[venueId] || venueGradients.allpress,
           addedAt: new Date().toISOString()
-        });
+        };
+        await addFavourite(favData);
         btn.classList.add('active');
 
         // Show notice for guests on first favourite
-        if (!isLoggedIn && favourites.length === 1) {
+        if (!currentUser && favourites.length === 0) {
           showGuestFavouriteNotice();
         }
       }
-
-      saveFavourites(favourites);
     }
 
     function showGuestFavouriteNotice() {
@@ -1411,20 +1489,24 @@
       }, 5000);
     }
 
-    function loadFavouritesState() {
-      const favourites = getFavourites();
+    async function loadFavouritesState() {
+      const favourites = await getFavourites();
       const cards = document.querySelectorAll('.venue-card');
 
       cards.forEach(card => {
         const venueId = card.dataset.id;
         const btn = card.querySelector('.favourite-btn');
-        if (btn && favourites.some(f => f.id === venueId)) {
-          btn.classList.add('active');
+        if (btn) {
+          if (favourites.some(f => f.id === venueId)) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
         }
       });
     }
 
-    // Load favourites state on page load
+    // Initial load (will be called again when auth state changes)
     loadFavouritesState();
 
     // Profile/Login state management
@@ -1660,6 +1742,14 @@
 
     // Initialize location banner
     updateLocationBanner();
+
+    // Expose functions to window for onclick handlers
+    window.toggleWalkFilter = toggleWalkFilter;
+    window.toggleFilter = toggleFilter;
+    window.toggleFavourite = toggleFavourite;
+    window.switchView = switchView;
+    window.handleProfileClick = handleProfileClick;
+    window.requestLocation = requestLocation;
   </script>
 </body>
 </html>

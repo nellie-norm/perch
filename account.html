@@ -254,6 +254,23 @@
       fill: currentColor;
     }
 
+    .favourite-heart {
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 8px;
+      margin: -8px;
+      transition: transform 0.2s;
+    }
+
+    .favourite-heart:hover {
+      transform: scale(1.1);
+    }
+
+    .favourite-heart:active {
+      transform: scale(0.95);
+    }
+
     .empty-state {
       text-align: center;
       padding: 32px 16px;
@@ -556,30 +573,20 @@
       <div class="section animate-in">
         <div class="section-header">
           <h3 class="section-title">Favourite Places</h3>
-          <a href="results.html" class="section-action">View all</a>
+          <a href="results.html" class="section-action">Browse</a>
         </div>
 
         <div class="favourites-grid" id="favourites-grid">
-          <div class="favourite-card" onclick="window.location.href='venue.html'">
-            <div class="favourite-image"></div>
-            <div class="favourite-details">
-              <div class="favourite-name">Allpress Espresso</div>
-              <div class="favourite-location">Shoreditch</div>
-            </div>
-            <div class="favourite-heart">
-              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </div>
-          </div>
-          <div class="favourite-card" onclick="window.location.href='venue.html'">
-            <div class="favourite-image"></div>
-            <div class="favourite-details">
-              <div class="favourite-name">Ozone Coffee</div>
-              <div class="favourite-location">Old Street</div>
-            </div>
-            <div class="favourite-heart">
-              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </div>
-          </div>
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="empty-state" id="empty-favourites" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <h3>No favourites yet</h3>
+          <p>Tap the heart icon on any venue to save it here</p>
+          <button class="btn btn-primary" onclick="window.location.href='results.html'" style="display: inline-flex;">Browse Workspaces</button>
         </div>
       </div>
 
@@ -696,7 +703,43 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    // Firebase Firestore for favourites
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
+      authDomain: "perch-96206.firebaseapp.com",
+      projectId: "perch-96206",
+      storageBucket: "perch-96206.firebasestorage.app",
+      messagingSenderId: "666435496292",
+      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    // Default gradients for venues without stored gradient
+    const defaultGradients = {
+      allpress: 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)',
+      ozone: 'linear-gradient(135deg, #5D6D7E 0%, #85929E 100%)',
+      hoxton: 'linear-gradient(135deg, #7D6B5D 0%, #A89080 100%)',
+      lookmum: 'linear-gradient(135deg, #6B7D5D 0%, #90A880 100%)',
+      caravan: 'linear-gradient(135deg, #5D7D8E 0%, #7DA0B0 100%)',
+      attendant: 'linear-gradient(135deg, #8D6D7E 0%, #A08090 100%)'
+    };
+
+    // Listen for auth state changes
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      loadFavourites();
+    });
+
     // Load user data
     document.addEventListener('DOMContentLoaded', () => {
       const name = localStorage.getItem('userName') || 'John Doe';
@@ -705,13 +748,90 @@
       document.getElementById('user-name').textContent = name;
       document.getElementById('user-email').textContent = email;
       document.getElementById('user-avatar').textContent = name.split(' ').map(n => n[0]).join('').toUpperCase();
-
-      // Load favourites from localStorage
-      const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
-      if (favourites.length === 0) {
-        // Keep default favourites for demo
-      }
     });
+
+    async function getFavourites() {
+      if (currentUser) {
+        try {
+          const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'favourites'));
+          const favourites = [];
+          querySnapshot.forEach((doc) => {
+            favourites.push({ id: doc.id, ...doc.data() });
+          });
+          return favourites;
+        } catch (error) {
+          console.error('Error getting favourites:', error);
+          return [];
+        }
+      } else {
+        const favourites = localStorage.getItem('favourites');
+        return favourites ? JSON.parse(favourites) : [];
+      }
+    }
+
+    async function loadFavourites() {
+      const favourites = await getFavourites();
+      const grid = document.getElementById('favourites-grid');
+      const emptyState = document.getElementById('empty-favourites');
+
+      if (favourites.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+      grid.innerHTML = '';
+
+      favourites.forEach(fav => {
+        const gradient = fav.gradient || defaultGradients[fav.id] || 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)';
+        const card = document.createElement('div');
+        card.className = 'favourite-card';
+        card.dataset.id = fav.id;
+        card.innerHTML = `
+          <div class="favourite-image" style="background: ${gradient};"></div>
+          <div class="favourite-details">
+            <div class="favourite-name">${fav.name}</div>
+            <div class="favourite-location">${fav.area || fav.type || ''}</div>
+          </div>
+          <button class="favourite-heart" title="Remove from favourites">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+        `;
+
+        // Add click handler for the heart button
+        card.querySelector('.favourite-heart').onclick = async (e) => {
+          e.stopPropagation();
+          await removeFavourite(fav.id);
+        };
+
+        // Add click handler for the card
+        card.onclick = () => {
+          window.location.href = 'venue.html?id=' + fav.id;
+        };
+
+        grid.appendChild(card);
+      });
+    }
+
+    async function removeFavourite(venueId) {
+      if (currentUser) {
+        try {
+          await deleteDoc(doc(db, 'users', currentUser.uid, 'favourites', venueId));
+        } catch (error) {
+          console.error('Error removing favourite:', error);
+        }
+      } else {
+        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+        const index = favourites.findIndex(f => f.id === venueId);
+        if (index > -1) {
+          favourites.splice(index, 1);
+          localStorage.setItem('favourites', JSON.stringify(favourites));
+        }
+      }
+      loadFavourites();
+    }
 
     function openModal() {
       document.getElementById('payment-modal').classList.add('active');
@@ -746,6 +866,13 @@
         closeModal();
       }
     });
+
+    // Expose functions to window for onclick handlers
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.selectPaymentOption = selectPaymentOption;
+    window.addPaymentMethod = addPaymentMethod;
+    window.logout = logout;
   </script>
 </body>
 </html>

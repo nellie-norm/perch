@@ -695,7 +695,7 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
     // Comprehensive venue database
     const venueDatabase = {
       allpress: {
@@ -853,40 +853,110 @@
       window.location.href = 'booking.html';
     }
 
-    // Favourites functionality
-    function getFavourites() {
-      const favourites = localStorage.getItem('favourites');
-      return favourites ? JSON.parse(favourites) : [];
+    // Firebase Firestore for favourites
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
+      authDomain: "perch-96206.firebaseapp.com",
+      projectId: "perch-96206",
+      storageBucket: "perch-96206.firebasestorage.app",
+      messagingSenderId: "666435496292",
+      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    // Listen for auth state changes
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      loadFavouriteState();
+    });
+
+    // Favourites functionality with Firestore
+    async function getFavourites() {
+      if (currentUser) {
+        // Get from Firestore
+        try {
+          const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'favourites'));
+          const favourites = [];
+          querySnapshot.forEach((doc) => {
+            favourites.push({ id: doc.id, ...doc.data() });
+          });
+          return favourites;
+        } catch (error) {
+          console.error('Error getting favourites:', error);
+          return [];
+        }
+      } else {
+        // Fallback to localStorage for guests
+        const favourites = localStorage.getItem('favourites');
+        return favourites ? JSON.parse(favourites) : [];
+      }
     }
 
-    function saveFavourites(favourites) {
-      localStorage.setItem('favourites', JSON.stringify(favourites));
+    async function addFavourite(favData) {
+      if (currentUser) {
+        try {
+          await setDoc(doc(db, 'users', currentUser.uid, 'favourites', favData.id), favData);
+        } catch (error) {
+          console.error('Error adding favourite:', error);
+        }
+      } else {
+        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+        favourites.push(favData);
+        localStorage.setItem('favourites', JSON.stringify(favourites));
+      }
     }
 
-    function toggleFavourite() {
+    async function removeFavourite(venueId) {
+      if (currentUser) {
+        try {
+          await deleteDoc(doc(db, 'users', currentUser.uid, 'favourites', venueId));
+        } catch (error) {
+          console.error('Error removing favourite:', error);
+        }
+      } else {
+        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
+        const index = favourites.findIndex(f => f.id === venueId);
+        if (index > -1) {
+          favourites.splice(index, 1);
+          localStorage.setItem('favourites', JSON.stringify(favourites));
+        }
+      }
+    }
+
+    async function toggleFavourite() {
       const btn = document.getElementById('favourite-btn');
-      const favourites = getFavourites();
-      const index = favourites.findIndex(f => f.id === venueId);
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const favourites = await getFavourites();
+      const isFavourited = favourites.some(f => f.id === venueId);
 
-      if (index > -1) {
-        favourites.splice(index, 1);
+      if (isFavourited) {
+        await removeFavourite(venueId);
         btn.classList.remove('active');
       } else {
-        favourites.push({
+        const favData = {
           id: venueId,
           name: venueName,
+          area: venue.area,
+          type: venue.type,
+          gradient: venue.gradient,
           addedAt: new Date().toISOString()
-        });
+        };
+        await addFavourite(favData);
         btn.classList.add('active');
 
         // Show notice for guests on first favourite
-        if (!isLoggedIn && favourites.length === 1) {
+        if (!currentUser && favourites.length === 0) {
           showGuestFavouriteNotice();
         }
       }
-
-      saveFavourites(favourites);
     }
 
     function showGuestFavouriteNotice() {
@@ -918,16 +988,20 @@
       setTimeout(() => { if (notice.parentElement) notice.remove(); }, 5000);
     }
 
-    function loadFavouriteState() {
-      const favourites = getFavourites();
+    async function loadFavouriteState() {
+      const favourites = await getFavourites();
       const btn = document.getElementById('favourite-btn');
       if (favourites.some(f => f.id === venueId)) {
         btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
       }
     }
 
-    // Initialize favourite state
-    loadFavouriteState();
+    // Expose functions to window for onclick handlers
+    window.selectSlot = selectSlot;
+    window.bookVenue = bookVenue;
+    window.toggleFavourite = toggleFavourite;
 
     // Initialize page with venue data
     loadVenueData();
