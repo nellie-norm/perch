@@ -472,10 +472,15 @@
       e.preventDefault();
       const email = document.getElementById('email').value;
 
+      // Create a nice display name from email
+      const namePart = email.split('@')[0];
+      const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1).replace(/[._]/g, ' ');
+
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userName', email.split('@')[0]);
+      localStorage.setItem('userName', displayName);
       localStorage.setItem('userEmail', email);
       localStorage.setItem('loginProvider', 'email');
+      localStorage.removeItem('isGuest');
 
       window.location.href = 'index.html';
     }

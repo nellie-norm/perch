@@ -389,8 +389,8 @@
         </div>
         <div class="detail-content">
           <div class="detail-label">Venue</div>
-          <div class="detail-value">Allpress Espresso</div>
-          <div class="detail-value" style="font-weight: 400; color: var(--text-secondary);">58 Redchurch Street, Shoreditch, London E2 7DP</div>
+          <div class="detail-value" id="confirm-venue-name">Allpress Espresso</div>
+          <div class="detail-value" id="confirm-venue-address" style="font-weight: 400; color: var(--text-secondary);">58 Redchurch Street, Shoreditch, London E2 7DP</div>
           <a href="#" class="detail-link">
             Get directions
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -478,9 +478,26 @@
     </div>
 
     <p class="footer-text animate-in">
-      Questions? <a href="#">Contact support</a> or call 020 7946 0123
+      Questions? <a href="#">Contact support</a> or call <span id="venue-phone">020 7946 0123</span>
     </p>
     </div>
   </div>
+
+  <script>
+    // Load venue data from localStorage
+    function loadConfirmationData() {
+      const venueData = localStorage.getItem('currentVenue');
+      const bookingTime = localStorage.getItem('bookingTime') || '2:30 PM';
+
+      if (venueData) {
+        const venue = JSON.parse(venueData);
+        document.getElementById('confirm-venue-name').textContent = venue.name;
+        document.getElementById('confirm-venue-address').textContent = venue.address;
+        document.getElementById('venue-phone').textContent = venue.phone;
+      }
+    }
+
+    loadConfirmationData();
+  </script>
 </body>
 </html>

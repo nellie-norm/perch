@@ -537,15 +537,15 @@
 
       <div class="booking-summary animate-in">
       <div class="summary-venue">
-        <div class="summary-image"></div>
+        <div class="summary-image" id="summary-image"></div>
         <div class="summary-details">
-          <h3>Allpress Espresso</h3>
-          <p>Coffee Roasters · Shoreditch</p>
+          <h3 id="venue-name">Allpress Espresso</h3>
+          <p id="venue-type">Coffee Roasters · Shoreditch</p>
           <div class="summary-rating">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
-            4.8 (124 reviews)
+            <span id="venue-rating">4.8 (124 reviews)</span>
           </div>
         </div>
       </div>
@@ -739,8 +739,9 @@
     function selectDuration(el, hours) {
       document.querySelectorAll('.duration-option').forEach(d => d.classList.remove('selected'));
       el.classList.add('selected');
-      // Update price display (£7 per hour)
-      const basePrice = 7 * hours;
+      // Update price display using venue price
+      const pricePerHour = window.venuePrice || 7;
+      const basePrice = pricePerHour * hours;
       const serviceFee = 1.50;
       const tax = (basePrice + serviceFee) * 0.077; // UK VAT simplified
       const total = basePrice + serviceFee + tax;
@@ -783,6 +784,31 @@
 
     // Initialize on page load
     checkUserStatus();
+
+    // Load venue data from localStorage
+    function loadBookingData() {
+      const venueData = localStorage.getItem('currentVenue');
+      const bookingTime = localStorage.getItem('bookingTime') || '2:30 PM';
+
+      if (venueData) {
+        const venue = JSON.parse(venueData);
+        document.getElementById('venue-name').textContent = venue.name;
+        document.getElementById('venue-type').textContent = `${venue.type} · ${venue.area}`;
+        document.getElementById('venue-rating').textContent = `${venue.rating} (${venue.reviews} reviews)`;
+        document.getElementById('summary-image').style.background = venue.gradient;
+
+        // Store price for calculations
+        window.venuePrice = venue.price;
+
+        // Update prices
+        selectDuration(document.querySelector('.duration-option.selected'), 2);
+      }
+
+      // Update time display
+      document.querySelector('.summary-row:nth-child(2) .summary-value').textContent = bookingTime;
+    }
+
+    loadBookingData();
   </script>
 </body>
 </html>

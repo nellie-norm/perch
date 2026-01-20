@@ -503,24 +503,24 @@
 
     <div class="venue-info animate-in">
       <div class="venue-title-row">
-        <h1 class="venue-title">Allpress Espresso</h1>
+        <h1 class="venue-title" id="venue-title">Allpress Espresso</h1>
         <div class="venue-rating-badge">
           <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-          4.8
+          <span id="venue-rating">4.8</span>
         </div>
       </div>
-      <p class="venue-subtitle">Coffee Roasters · Shoreditch · 4 min walk</p>
+      <p class="venue-subtitle" id="venue-subtitle">Coffee Roasters · Shoreditch · 4 min walk</p>
 
-      <div class="venue-tags">
-        <span class="venue-tag" style="background: #E3F2E8; color: #1B7340;">
+      <div class="venue-tags" id="venue-tags">
+        <span class="venue-tag" id="wifi-tag" style="background: #E3F2E8; color: #1B7340;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
             <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
             <circle cx="12" cy="20" r="1"/>
           </svg>
-          Fast WiFi · Great for calls
+          <span id="wifi-text">Fast WiFi · Great for calls</span>
         </span>
         <span class="venue-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -536,7 +536,7 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          14 seats
+          <span id="seats-text">14 seats</span>
         </span>
       </div>
     </div>
@@ -688,23 +688,170 @@
 
     <div class="bottom-bar">
       <div class="bottom-price">
-        <span class="bottom-price-amount">£7</span>
+        <span class="bottom-price-amount" id="venue-price">£7</span>
         <span class="bottom-price-unit">/hour</span>
       </div>
-      <button class="book-btn" onclick="window.location.href='booking.html'">Book Now</button>
+      <button class="book-btn" id="book-btn" onclick="bookVenue()">Book Now</button>
     </div>
   </div>
 
   <script>
+    // Comprehensive venue database
+    const venueDatabase = {
+      allpress: {
+        id: 'allpress',
+        name: 'Allpress Espresso',
+        type: 'Coffee Roasters',
+        area: 'Shoreditch',
+        address: '58 Redchurch Street, Shoreditch, London E2 7DP',
+        walk: 4,
+        rating: 4.8,
+        reviews: 124,
+        price: 7,
+        wifi: 'fast',
+        wifiSpeed: '120 Mbps',
+        seats: 14,
+        phone: '020 7749 1780',
+        gradient: 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)'
+      },
+      ozone: {
+        id: 'ozone',
+        name: 'Ozone Coffee Roasters',
+        type: 'Café',
+        area: 'Old Street',
+        address: '11 Leonard Street, Shoreditch, London EC2A 4AQ',
+        walk: 7,
+        rating: 4.7,
+        reviews: 98,
+        price: 8,
+        wifi: 'fast',
+        wifiSpeed: '150 Mbps',
+        seats: 22,
+        phone: '020 7490 1039',
+        gradient: 'linear-gradient(135deg, #5D6D7E 0%, #85929E 100%)'
+      },
+      hoxton: {
+        id: 'hoxton',
+        name: 'The Hoxton Lobby',
+        type: 'Hotel Café',
+        area: 'Shoreditch',
+        address: '81 Great Eastern Street, London EC2A 3HU',
+        walk: 5,
+        rating: 4.5,
+        reviews: 156,
+        price: 6,
+        wifi: 'fine',
+        wifiSpeed: '50 Mbps',
+        seats: 35,
+        phone: '020 7550 1000',
+        gradient: 'linear-gradient(135deg, #7D6B5D 0%, #A89080 100%)'
+      },
+      lookmum: {
+        id: 'lookmum',
+        name: 'Look Mum No Hands!',
+        type: 'Bike Café',
+        area: 'Clerkenwell',
+        address: '49 Old Street, London EC1V 9HX',
+        walk: 9,
+        rating: 4.6,
+        reviews: 87,
+        price: 5,
+        wifi: 'fast',
+        wifiSpeed: '100 Mbps',
+        seats: 18,
+        phone: '020 7253 1025',
+        gradient: 'linear-gradient(135deg, #6B7D5D 0%, #90A880 100%)'
+      },
+      caravan: {
+        id: 'caravan',
+        name: "Caravan King's Cross",
+        type: 'Restaurant',
+        area: "King's Cross",
+        address: '1 Granary Square, London N1C 4AA',
+        walk: 14,
+        rating: 4.4,
+        reviews: 203,
+        price: 9,
+        wifi: 'fast',
+        wifiSpeed: '200 Mbps',
+        seats: 40,
+        phone: '020 7101 7661',
+        gradient: 'linear-gradient(135deg, #5D7D8E 0%, #7DA0B0 100%)'
+      },
+      attendant: {
+        id: 'attendant',
+        name: 'Attendant Fitzrovia',
+        type: 'Café',
+        area: 'Fitzrovia',
+        address: '27A Foley Street, London W1W 6DY',
+        walk: 18,
+        rating: 4.3,
+        reviews: 65,
+        price: 6,
+        wifi: 'fine',
+        wifiSpeed: '45 Mbps',
+        seats: 12,
+        phone: '020 7637 3794',
+        gradient: 'linear-gradient(135deg, #8D6D7E 0%, #A08090 100%)'
+      }
+    };
+
+    // Get venue ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const venueId = urlParams.get('id') || 'allpress';
+    const venue = venueDatabase[venueId] || venueDatabase.allpress;
+    const venueName = venue.name;
+
+    // Load venue data into page
+    function loadVenueData() {
+      document.title = `${venue.name} - Perch`;
+      document.getElementById('venue-title').textContent = venue.name;
+      document.getElementById('venue-rating').textContent = venue.rating;
+      document.getElementById('venue-subtitle').textContent = `${venue.type} · ${venue.area} · ${venue.walk} min walk`;
+      document.getElementById('venue-price').textContent = `£${venue.price}`;
+      document.getElementById('seats-text').textContent = `${venue.seats} seats`;
+
+      // Update WiFi badge
+      const wifiTag = document.getElementById('wifi-tag');
+      const wifiText = document.getElementById('wifi-text');
+      if (venue.wifi === 'fast') {
+        wifiTag.style.background = '#E3F2E8';
+        wifiTag.style.color = '#1B7340';
+        wifiText.textContent = 'Fast WiFi · Great for calls';
+      } else {
+        wifiTag.style.background = '#FFF4E5';
+        wifiTag.style.color = '#B86E00';
+        wifiText.textContent = 'Fine WiFi · Basic browsing';
+      }
+
+      // Update gallery images
+      document.querySelectorAll('.gallery-item').forEach((item, i) => {
+        item.style.background = venue.gradient;
+      });
+
+      // Update time slot prices
+      document.querySelectorAll('.slot-price').forEach(el => {
+        if (el.textContent !== 'Full') {
+          el.textContent = `£${venue.price}`;
+        }
+      });
+
+      // Store venue data for booking
+      localStorage.setItem('currentVenue', JSON.stringify(venue));
+    }
+
     function selectSlot(el) {
       if (el.classList.contains('unavailable')) return;
       document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
       el.classList.add('selected');
     }
 
-    // Venue data for this page
-    const venueId = 'allpress';
-    const venueName = 'Allpress Espresso';
+    function bookVenue() {
+      const selectedSlot = document.querySelector('.time-slot.selected .slot-time');
+      const time = selectedSlot ? selectedSlot.textContent : '2:30 PM';
+      localStorage.setItem('bookingTime', time);
+      window.location.href = 'booking.html';
+    }
 
     // Favourites functionality
     function getFavourites() {
@@ -781,6 +928,9 @@
 
     // Initialize favourite state
     loadFavouriteState();
+
+    // Initialize page with venue data
+    loadVenueData();
   </script>
 </body>
 </html>
