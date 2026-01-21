@@ -1014,9 +1014,12 @@
       if (!confirm('Are you sure you want to cancel this booking?')) return;
 
       try {
-        // Fetch booking details for the cancellation email
-        const bookingDoc = await getDoc(doc(db, 'bookings', bookingRef));
-        const booking = bookingDoc.exists() ? bookingDoc.data() : null;
+        // Fetch booking details for the cancellation email (from user's collection)
+        let booking = null;
+        if (currentUser) {
+          const bookingDoc = await getDoc(doc(db, 'users', currentUser.uid, 'bookings', bookingRef));
+          booking = bookingDoc.exists() ? bookingDoc.data() : null;
+        }
 
         // Update status in both collections
         await updateDoc(doc(db, 'bookings', bookingRef), {

@@ -868,7 +868,7 @@
     // Send confirmation email
     async function sendConfirmationEmail(booking) {
       try {
-        await emailjs.send('service_nt1ujbi', 'template_aey71am', {
+        await emailjs.send('service_nt1ujbi', 'template_confirmation', {
           to_name: booking.user.name,
           to_email: booking.user.email,
           booking_ref: booking.reference,
@@ -1028,8 +1028,8 @@
         // Store booking ref for confirmation page
         localStorage.setItem('lastBookingRef', bookingRef);
 
-        // Send confirmation email (don't await - let it send in background)
-        sendConfirmationEmail(booking);
+        // Send confirmation email before navigating
+        await sendConfirmationEmail(booking);
 
         // Navigate to confirmation
         window.location.href = 'confirmation.html';
