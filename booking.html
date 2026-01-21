@@ -565,6 +565,7 @@
       to { transform: rotate(360deg); }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
   <div class="page booking-page">
@@ -807,6 +808,29 @@
       currentUser = user;
     });
 
+    // Initialize EmailJS
+    emailjs.init('I2Jsu6HwY3b2r74hs');
+
+    // Send confirmation email
+    async function sendConfirmationEmail(booking) {
+      try {
+        await emailjs.send('service_nt1ujbi', 'template_aey71am', {
+          to_name: booking.user.name,
+          to_email: booking.user.email,
+          booking_ref: booking.reference,
+          venue_name: booking.venue.name,
+          booking_date: new Date(booking.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+          booking_time: booking.time,
+          duration: booking.duration,
+          total_price: booking.totalPrice.toFixed(2)
+        });
+        console.log('Confirmation email sent');
+      } catch (error) {
+        console.error('Email failed:', error);
+        // Don't block booking if email fails
+      }
+    }
+
     // Generate unique booking reference
     function generateBookingRef() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -947,6 +971,9 @@
 
         // Store booking ref for confirmation page
         localStorage.setItem('lastBookingRef', bookingRef);
+
+        // Send confirmation email (don't await - let it send in background)
+        sendConfirmationEmail(booking);
 
         // Navigate to confirmation
         window.location.href = 'confirmation.html';
