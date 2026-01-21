@@ -124,6 +124,11 @@
       color: white;
     }
 
+    .popular-tag.selected {
+      background: var(--primary);
+      color: white;
+    }
+
     .features {
       margin-top: auto;
       padding-top: 32px;
@@ -810,8 +815,9 @@
           localStorage.removeItem('mapCenterLat');
           localStorage.removeItem('mapCenterLng');
 
-          // Navigate to results
-          window.location.href = 'results.html';
+          // Highlight the selected tag
+          document.querySelectorAll('.popular-tag').forEach(t => t.classList.remove('selected'));
+          tag.classList.add('selected');
         }
       });
     });
