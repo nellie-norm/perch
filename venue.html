@@ -696,6 +696,31 @@
   </div>
 
   <script type="module">
+    // Get user location from localStorage
+    const userLat = parseFloat(localStorage.getItem('searchLocationLat')) || parseFloat(localStorage.getItem('userLat'));
+    const userLng = parseFloat(localStorage.getItem('searchLocationLng')) || parseFloat(localStorage.getItem('userLng'));
+
+    // Haversine formula to calculate distance between two points
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    }
+
+    // Convert distance to walking time (average walking speed: 5 km/h)
+    function getWalkTime(venueLat, venueLng) {
+      if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) {
+        return null; // No user location available
+      }
+      const distanceKm = calculateDistance(userLat, userLng, venueLat, venueLng);
+      return Math.round(distanceKm / 5 * 60); // Minutes
+    }
+
     // Comprehensive venue database
     const venueDatabase = {
       allpress: {
@@ -704,7 +729,8 @@
         type: 'Coffee Roasters',
         area: 'Shoreditch',
         address: '58 Redchurch Street, Shoreditch, London E2 7DP',
-        walk: 4,
+        lat: 51.5245,
+        lng: -0.0760,
         rating: 4.8,
         reviews: 124,
         price: 7,
@@ -720,7 +746,8 @@
         type: 'Café',
         area: 'Old Street',
         address: '11 Leonard Street, Shoreditch, London EC2A 4AQ',
-        walk: 7,
+        lat: 51.5275,
+        lng: -0.0840,
         rating: 4.7,
         reviews: 98,
         price: 8,
@@ -736,7 +763,8 @@
         type: 'Hotel Café',
         area: 'Shoreditch',
         address: '81 Great Eastern Street, London EC2A 3HU',
-        walk: 5,
+        lat: 51.5265,
+        lng: -0.0800,
         rating: 4.5,
         reviews: 156,
         price: 6,
@@ -752,7 +780,8 @@
         type: 'Bike Café',
         area: 'Clerkenwell',
         address: '49 Old Street, London EC1V 9HX',
-        walk: 9,
+        lat: 51.5225,
+        lng: -0.1020,
         rating: 4.6,
         reviews: 87,
         price: 5,
@@ -768,7 +797,8 @@
         type: 'Restaurant',
         area: "King's Cross",
         address: '1 Granary Square, London N1C 4AA',
-        walk: 14,
+        lat: 51.5355,
+        lng: -0.1245,
         rating: 4.4,
         reviews: 203,
         price: 9,
@@ -784,7 +814,8 @@
         type: 'Café',
         area: 'Fitzrovia',
         address: '27A Foley Street, London W1W 6DY',
-        walk: 18,
+        lat: 51.5195,
+        lng: -0.1385,
         rating: 4.3,
         reviews: 65,
         price: 6,
@@ -807,7 +838,9 @@
       document.title = `${venue.name} - Perch`;
       document.getElementById('venue-title').textContent = venue.name;
       document.getElementById('venue-rating').textContent = venue.rating;
-      document.getElementById('venue-subtitle').textContent = `${venue.type} · ${venue.area} · ${venue.walk} min walk`;
+      const walkTime = getWalkTime(venue.lat, venue.lng);
+      const walkText = walkTime ? `${walkTime} min walk` : venue.area;
+      document.getElementById('venue-subtitle').textContent = `${venue.type} · ${walkText}`;
       document.getElementById('venue-price').textContent = `£${venue.price}`;
       document.getElementById('seats-text').textContent = `${venue.seats} seats`;
 
