@@ -1332,21 +1332,36 @@
     calculateWalkTimes();
     updateVenueCards();
 
-    // Walk time filter
-    let walkFilterActive = true;
+    // Walk time filter - load from localStorage or default to true
+    let walkFilterActive = localStorage.getItem('walkFilterActive') !== 'false';
 
-    // Active filters tracking
-    let activeFilters = {
+    // Active filters tracking - load from localStorage
+    let activeFilters = JSON.parse(localStorage.getItem('activeFilters')) || {
       'fast-wifi': false,
       'power': false,
       'quiet': false,
       'under10': false
     };
 
+    // Restore filter UI state on load
+    function restoreFilterState() {
+      const toggle = document.getElementById('walk-toggle');
+      toggle.classList.toggle('active', walkFilterActive);
+
+      // Restore chip states
+      document.querySelectorAll('.filter-chip[onclick*="toggleFilter"]').forEach(chip => {
+        const match = chip.getAttribute('onclick').match(/toggleFilter\(this,\s*'([^']+)'\)/);
+        if (match && activeFilters[match[1]]) {
+          chip.classList.add('active');
+        }
+      });
+    }
+
     function toggleWalkFilter() {
       const toggle = document.getElementById('walk-toggle');
       walkFilterActive = !walkFilterActive;
       toggle.classList.toggle('active', walkFilterActive);
+      localStorage.setItem('walkFilterActive', walkFilterActive);
       filterVenues();
     }
 
@@ -1403,10 +1418,12 @@
     function toggleFilter(el, filterType) {
       el.classList.toggle('active');
       activeFilters[filterType] = el.classList.contains('active');
+      localStorage.setItem('activeFilters', JSON.stringify(activeFilters));
       filterVenues();
     }
 
-    // Initial filter
+    // Restore filter state and apply initial filter
+    restoreFilterState();
     filterVenues();
 
     // Venue gradients for favourites
@@ -1582,13 +1599,29 @@
     function initMap() {
       if (map) return; // Already initialized
 
-      // Center on user location or Shoreditch
-      map = L.map('map').setView([userLat, userLng], 14);
+      // Load saved map position or use user location
+      const savedMapLat = parseFloat(localStorage.getItem('mapCenterLat'));
+      const savedMapLng = parseFloat(localStorage.getItem('mapCenterLng'));
+      const savedMapZoom = parseInt(localStorage.getItem('mapZoom'));
+
+      const mapLat = savedMapLat || userLat;
+      const mapLng = savedMapLng || userLng;
+      const mapZoom = savedMapZoom || 14;
+
+      map = L.map('map').setView([mapLat, mapLng], mapZoom);
 
       // Add OpenStreetMap tiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
+
+      // Save map position when user moves/zooms
+      map.on('moveend', () => {
+        const center = map.getCenter();
+        localStorage.setItem('mapCenterLat', center.lat);
+        localStorage.setItem('mapCenterLng', center.lng);
+        localStorage.setItem('mapZoom', map.getZoom());
+      });
 
       // Add user location marker
       if (userLat && userLng) {
@@ -1674,6 +1707,9 @@
 
       toggleBtns.forEach(btn => btn.classList.remove('active'));
 
+      // Save view preference
+      localStorage.setItem('resultsView', view);
+
       if (view === 'map') {
         listContainer.classList.add('hidden');
         mapContainer.classList.add('active');
@@ -1689,6 +1725,12 @@
         mapContainer.classList.remove('active');
         toggleBtns[0].classList.add('active');
       }
+    }
+
+    // Restore view preference on page load
+    const savedView = localStorage.getItem('resultsView');
+    if (savedView === 'map') {
+      switchView('map');
     }
 
     // Update map when filter changes
