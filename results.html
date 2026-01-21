@@ -49,23 +49,6 @@
       justify-content: center;
     }
 
-    .search-summary {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow);
-    }
-
-    .search-summary-text {
-      font-size: 14px;
-      color: var(--text-secondary);
-    }
-
-    .search-summary-text strong {
-      color: var(--text);
-    }
-
     .filter-bar {
       display: flex;
       gap: 8px;
@@ -422,12 +405,6 @@
 
       .page-header h2 {
         font-size: 28px;
-      }
-
-      .search-summary {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
       }
 
       .filter-bar {
@@ -1017,7 +994,7 @@
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
             <circle cx="12" cy="10" r="3"/>
           </svg>
-          <input type="text" class="location-search-input" id="location-search-input" placeholder="Search location..." value="Shoreditch, London">
+          <input type="text" class="location-search-input" id="location-search-input" placeholder="Search location..." autocomplete="off">
           <span class="location-search-meta">Today · 2:00 PM</span>
         </div>
         <div class="location-suggestions" id="location-suggestions"></div>
@@ -1457,9 +1434,15 @@
     let markers = [];
     let userMarker = null;
 
-    // Get user location from localStorage
-    let userLat = parseFloat(localStorage.getItem('userLat'));
-    let userLng = parseFloat(localStorage.getItem('userLng'));
+    // Get user location from localStorage (prefer search location over geolocation)
+    let userLat = parseFloat(localStorage.getItem('searchLocationLat')) || parseFloat(localStorage.getItem('userLat'));
+    let userLng = parseFloat(localStorage.getItem('searchLocationLng')) || parseFloat(localStorage.getItem('userLng'));
+
+    // Default to Shoreditch if no location saved
+    if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) {
+      userLat = 51.5245;
+      userLng = -0.0760;
+    }
 
     // Haversine formula to calculate distance between two points
     function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -2093,9 +2076,7 @@
 
     // Load saved location or use default
     const savedLocationName = localStorage.getItem('searchLocationName');
-    if (savedLocationName) {
-      locationInput.value = savedLocationName;
-    }
+    locationInput.value = savedLocationName || 'Shoreditch, London';
 
     // Debounced search as user types
     locationInput.addEventListener('input', () => {
