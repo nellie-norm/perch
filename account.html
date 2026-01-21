@@ -604,6 +604,7 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
   <div class="page account-page">
@@ -862,10 +863,13 @@
   <script type="module">
     // Firebase Firestore for favourites and bookings
     import { db, auth } from "./js/firebase-config.js";
-    import { doc, deleteDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { doc, deleteDoc, updateDoc, collection, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     let currentUser = null;
+
+    // Initialize EmailJS
+    emailjs.init('I2Jsu6HwY3b2r74hs');
 
     // Default gradients for venues without stored gradient
     const defaultGradients = {
@@ -1010,6 +1014,10 @@
       if (!confirm('Are you sure you want to cancel this booking?')) return;
 
       try {
+        // Fetch booking details for the cancellation email
+        const bookingDoc = await getDoc(doc(db, 'bookings', bookingRef));
+        const booking = bookingDoc.exists() ? bookingDoc.data() : null;
+
         // Update status in both collections
         await updateDoc(doc(db, 'bookings', bookingRef), {
           status: 'cancelled',
@@ -1023,11 +1031,36 @@
           });
         }
 
+        // Send cancellation email
+        if (booking) {
+          await sendCancellationEmail({ ...booking, reference: bookingRef });
+        }
+
         // Reload bookings
         loadBookings();
       } catch (error) {
         console.error('Error cancelling booking:', error);
         alert('Failed to cancel booking. Please try again.');
+      }
+    }
+
+    // Send cancellation email
+    async function sendCancellationEmail(booking) {
+      try {
+        await emailjs.send('service_nt1ujbi', 'template_cancellation', {
+          to_name: booking.user?.name || currentUser?.displayName || 'Guest',
+          to_email: booking.user?.email || currentUser?.email,
+          booking_ref: booking.reference,
+          venue_name: booking.venue?.name || 'Venue',
+          booking_date: new Date(booking.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+          booking_time: booking.time,
+          duration: booking.duration,
+          people: booking.people
+        });
+        console.log('Cancellation email sent');
+      } catch (error) {
+        console.error('Cancellation email failed:', error);
+        // Don't block cancellation if email fails
       }
     }
 
