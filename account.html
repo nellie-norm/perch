@@ -389,6 +389,31 @@
       margin-bottom: 16px;
     }
 
+    /* Expandable History Section */
+    .history-expandable {
+      background: var(--bg);
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .history-expandable .booking-card {
+      margin-bottom: 10px;
+    }
+
+    .history-expandable .booking-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .menu-arrow {
+      transition: transform 0.2s;
+    }
+
+    .menu-arrow.expanded {
+      transform: rotate(90deg);
+    }
+
     /* Menu Items */
     .menu-list {
       background: var(--card);
@@ -684,26 +709,6 @@
         </div>
       </div>
 
-      <!-- Booking History -->
-      <div class="section animate-in">
-        <div class="section-header">
-          <h3 class="section-title">Booking History</h3>
-        </div>
-
-        <div id="history-list">
-          <!-- Dynamically populated -->
-        </div>
-
-        <div class="empty-state" id="empty-history" style="display: none;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <h3>No past bookings</h3>
-          <p>Your completed bookings will appear here</p>
-        </div>
-      </div>
-
       <!-- Favourites -->
       <div class="section animate-in">
         <div class="section-header">
@@ -728,20 +733,36 @@
       <!-- Menu -->
       <div class="section animate-in">
         <div class="menu-list">
-          <div class="menu-item">
+          <div class="menu-item" onclick="toggleHistorySection()">
             <div class="menu-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
               </svg>
             </div>
             <div class="menu-content">
               <div class="menu-label">Booking History</div>
-              <div class="menu-sublabel">View past reservations</div>
+              <div class="menu-sublabel" id="history-count">View past reservations</div>
             </div>
-            <div class="menu-arrow">
+            <div class="menu-arrow" id="history-arrow">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
+            </div>
+          </div>
+
+          <!-- Expandable History Section -->
+          <div class="history-expandable" id="history-expandable" style="display: none;">
+            <div id="history-list">
+              <!-- Dynamically populated -->
+            </div>
+            <div class="empty-state" id="empty-history" style="display: none; margin: 12px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <h3>No past bookings</h3>
+              <p>Your completed bookings will appear here</p>
             </div>
           </div>
           <div class="menu-item">
@@ -892,18 +913,38 @@
       }
     }
 
+    // Store history count for display
+    let historyCount = 0;
+
+    // Toggle history section
+    function toggleHistorySection() {
+      const expandable = document.getElementById('history-expandable');
+      const arrow = document.getElementById('history-arrow');
+      const isExpanded = expandable.style.display !== 'none';
+
+      if (isExpanded) {
+        expandable.style.display = 'none';
+        arrow.classList.remove('expanded');
+      } else {
+        expandable.style.display = 'block';
+        arrow.classList.add('expanded');
+      }
+    }
+
     // Load bookings from Firestore
     async function loadBookings() {
       const upcomingList = document.getElementById('bookings-list');
       const upcomingEmpty = document.getElementById('empty-bookings');
       const historyList = document.getElementById('history-list');
       const historyEmpty = document.getElementById('empty-history');
+      const historyCountEl = document.getElementById('history-count');
 
       if (!currentUser) {
         upcomingList.style.display = 'none';
         upcomingEmpty.style.display = 'block';
-        historyList.style.display = 'none';
+        historyList.innerHTML = '';
         historyEmpty.style.display = 'block';
+        historyCountEl.textContent = 'View past reservations';
         return;
       }
 
@@ -948,12 +989,17 @@
           upcoming.forEach(booking => renderBookingCard(booking, upcomingList, false, true));
         }
 
-        // Render past bookings (including cancelled)
+        // Render past bookings (including cancelled) in the expandable section
         const history = [...past, ...cancelled].sort((a, b) => new Date(b.date) - new Date(a.date));
+        historyCount = history.length;
+
+        // Update the history count in menu
         if (history.length === 0) {
+          historyCountEl.textContent = 'No past reservations';
           historyList.style.display = 'none';
           historyEmpty.style.display = 'block';
         } else {
+          historyCountEl.textContent = `${history.length} past reservation${history.length === 1 ? '' : 's'}`;
           historyList.style.display = 'block';
           historyEmpty.style.display = 'none';
           historyList.innerHTML = '';
@@ -963,10 +1009,14 @@
         console.error('Error loading bookings:', error);
         upcomingList.style.display = 'none';
         upcomingEmpty.style.display = 'block';
-        historyList.style.display = 'none';
+        historyList.innerHTML = '';
         historyEmpty.style.display = 'block';
+        historyCountEl.textContent = 'View past reservations';
       }
     }
+
+    // Expose toggleHistorySection to window
+    window.toggleHistorySection = toggleHistorySection;
 
     // Cancel a booking
     async function cancelBooking(bookingRef) {

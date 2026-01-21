@@ -1006,7 +1006,7 @@
         </div>
 
         <!-- Venue 3: The Hoxton - 5 min walk, Fine WiFi -->
-        <div class="venue-card animate-in" data-id="hoxton" data-walk="5" data-wifi="fine" data-price="6" onclick="window.location.href='venue.html?id=hoxton'">
+        <div class="venue-card animate-in" data-id="hoxton" data-walk="5" data-wifi="fine" data-price="6" data-quiet="true" onclick="window.location.href='venue.html?id=hoxton'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'hoxton', 'The Hoxton Lobby')">
@@ -1161,7 +1161,7 @@
         </div>
 
         <!-- Venue 6: Attendant Fitzrovia - 18 min walk, Fine WiFi -->
-        <div class="venue-card animate-in" data-id="attendant" data-walk="18" data-wifi="fine" data-price="6" onclick="window.location.href='venue.html?id=attendant'">
+        <div class="venue-card animate-in" data-id="attendant" data-walk="18" data-wifi="fine" data-price="6" data-quiet="true" onclick="window.location.href='venue.html?id=attendant'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'attendant', 'Attendant Fitzrovia')">
@@ -1335,6 +1335,14 @@
     // Walk time filter
     let walkFilterActive = true;
 
+    // Active filters tracking
+    let activeFilters = {
+      'fast-wifi': false,
+      'power': false,
+      'quiet': false,
+      'under10': false
+    };
+
     function toggleWalkFilter() {
       const toggle = document.getElementById('walk-toggle');
       walkFilterActive = !walkFilterActive;
@@ -1348,7 +1356,37 @@
 
       cards.forEach(card => {
         const walkTime = parseInt(card.dataset.walk);
-        const shouldShow = !walkFilterActive || walkTime <= 10;
+        const wifi = card.dataset.wifi;
+        const price = parseInt(card.dataset.price);
+        const hasPower = card.dataset.power !== 'false'; // All venues have power in this demo
+        const isQuiet = card.dataset.quiet === 'true';
+
+        let shouldShow = true;
+
+        // Walk time filter
+        if (walkFilterActive && walkTime > 10) {
+          shouldShow = false;
+        }
+
+        // Fast WiFi filter
+        if (activeFilters['fast-wifi'] && wifi !== 'fast') {
+          shouldShow = false;
+        }
+
+        // Power filter (all venues have power in demo, but check data attribute)
+        if (activeFilters['power'] && !hasPower) {
+          shouldShow = false;
+        }
+
+        // Quiet filter
+        if (activeFilters['quiet'] && !isQuiet) {
+          shouldShow = false;
+        }
+
+        // Under £10 filter
+        if (activeFilters['under10'] && price >= 10) {
+          shouldShow = false;
+        }
 
         if (shouldShow) {
           card.classList.remove('hidden');
@@ -1364,7 +1402,8 @@
 
     function toggleFilter(el, filterType) {
       el.classList.toggle('active');
-      // Filter logic would go here for a real app
+      activeFilters[filterType] = el.classList.contains('active');
+      filterVenues();
     }
 
     // Initial filter
