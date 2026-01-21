@@ -5,7 +5,13 @@
       "Bash(git push:*)",
       "Bash(python3:*)",
       "Bash(curl:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase login:list:*)",
+      "Bash(firebase use:*)",
+      "Bash(node:*)",
+      "Bash(git log:*)",
+      "Bash(grep:*)"
     ]
   }
 }

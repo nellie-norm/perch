@@ -1415,7 +1415,12 @@
       <!-- List Container -->
       <div class="list-container" id="list-container">
       <div class="venues-grid" id="venues-grid">
-        <!-- Venue 1: Allpress Espresso - 4 min walk, Fast WiFi -->
+        <!-- Venue cards rendered dynamically by JavaScript -->
+        <div class="loading-placeholder" style="text-align: center; padding: 2rem; color: #666;">Loading venues...</div>
+      </div>
+
+      <!-- PLACEHOLDER: Old hardcoded cards removed. Delete this comment block after verification. -->
+      <div style="display:none" data-delete-me="true">
         <div class="venue-card animate-in" data-id="allpress" data-walk="4" data-wifi="fast" data-price="7" data-seats="14" onclick="window.location.href='venue.html?id=allpress'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
@@ -1737,7 +1742,7 @@
           </div>
         </div>
 
-      </div>
+      </div> <!-- End hidden old cards -->
 
       <!-- No Results Empty State -->
       <div class="no-results" id="no-results" style="display: none;">
@@ -1795,8 +1800,11 @@
       const allVenues = await getAllVenues();
       venues = allVenues.map(v => ({ ...v, price: v.pricePerHour }));
       console.log(`Loaded ${venues.length} venues from Firestore`);
-      // Venues are used for filtering, sorting, and map markers
-      // The venue cards are static HTML for now
+
+      // Render venue cards dynamically
+      renderVenueCards();
+
+      // Apply filters and initialize map
       filterVenues();
       initMap();
     }
@@ -1880,9 +1888,83 @@
       });
     }
 
-    // Initialize with calculated distances
-    calculateWalkTimes();
-    updateVenueCards();
+    // Render venue cards dynamically from venues data
+    function renderVenueCards() {
+      const grid = document.getElementById('venues-grid');
+      if (!grid || venues.length === 0) return;
+
+      // Calculate walk times first
+      calculateWalkTimes();
+
+      // Generate HTML for each venue
+      const cardsHtml = venues.map(venue => {
+        const isNearby = venue.walk <= 10;
+        const quietAttr = venue.quiet ? 'data-quiet="true"' : '';
+
+        return `
+        <div class="venue-card animate-in" data-id="${venue.id}" data-walk="${venue.walk}" data-wifi="${venue.wifi}" data-price="${venue.pricePerHour || venue.price}" data-seats="${venue.seats}" ${quietAttr} onclick="window.location.href='venue.html?id=${venue.id}'">
+          <div class="venue-image-container">
+            <div class="venue-image"></div>
+            <button class="favourite-btn" onclick="toggleFavourite(event, '${venue.id}', '${venue.name.replace(/'/g, "\\'")}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="venue-content">
+            <div class="venue-header">
+              <div>
+                <h3 class="venue-name">${venue.name}</h3>
+                <p class="venue-type">${venue.type} · ${venue.area}</p>
+                <p class="venue-hours">Open · Closes ${venue.closes}</p>
+              </div>
+              <div class="venue-rating">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                ${venue.rating}
+              </div>
+            </div>
+            <div class="venue-meta">
+              <span class="walk-time ${isNearby ? 'nearby' : ''}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 4v12M7 8l6-4 6 4M7 12l6 4 6-4"/>
+                </svg>
+                ${venue.walk} min walk
+              </span>
+              <span class="wifi-badge ${venue.wifi}">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>
+                ${venue.wifi === 'fast' ? 'Fast' : 'Fine'}
+              </span>
+            </div>
+            <div class="venue-footer">
+              <div class="venue-amenities">
+                <span class="amenity" title="Power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span>
+                <span class="amenity" title="Coffee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
+              </div>
+              <div class="venue-price">
+                <span class="venue-price-amount">£${venue.pricePerHour || venue.price}</span>
+                <span class="venue-price-unit">/hour</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+      }).join('');
+
+      grid.innerHTML = cardsHtml;
+
+      // Re-apply favourite states
+      loadFavouritesState();
+    }
+
+    // Initialize with rendered cards
+    // Note: renderVenueCards is called from initVenues() after venues are loaded
 
     // Walk time filter - load from localStorage or default to true
     let walkFilterActive = localStorage.getItem('walkFilterActive') !== 'false';
