@@ -1806,7 +1806,7 @@
 
       const mapLat = savedMapLat || userLat;
       const mapLng = savedMapLng || userLng;
-      const mapZoom = savedMapZoom || 14;
+      const mapZoom = savedMapZoom || 15;
 
       map = L.map('map').setView([mapLat, mapLng], mapZoom);
 
@@ -2005,7 +2005,7 @@
 
             // Update map if visible
             if (map) {
-              map.setView([userLat, userLng], 14);
+              map.setView([userLat, userLng], 15);
 
               // Add or update user marker
               if (userMarker) {
@@ -2164,7 +2164,7 @@
     async function fetchLocationSuggestions(query) {
       try {
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=place,locality,neighborhood,address&limit=5&language=en`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=place,locality,neighborhood,address&limit=5&language=en&country=gb&proximity=-0.1,51.5`
         );
 
         if (!response.ok) throw new Error('Search failed');
@@ -2224,7 +2224,7 @@
 
       // Update map if initialized
       if (map) {
-        map.setView([lat, lng], 14);
+        map.setView([lat, lng], 15);
 
         // Update or add search location marker
         if (userMarker) {
