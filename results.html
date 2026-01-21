@@ -285,10 +285,10 @@
     .wifi-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 10px;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.3px;
@@ -305,8 +305,9 @@
     }
 
     .wifi-badge svg {
-      width: 12px;
-      height: 12px;
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
     }
 
     /* Walk time indicator */
@@ -1298,6 +1299,7 @@
             <div class="sort-option" data-sort="cheapest" onclick="event.stopPropagation(); sortVenues('cheapest')">Cheapest</div>
           </div>
         </div>
+        <div class="filter-chip" onclick="toggleFilter(this, 'calls-ok')">Good for calls</div>
         <div class="filter-chip" onclick="toggleFilter(this, 'fast-wifi')">Fast WiFi</div>
         <div class="filter-chip" onclick="toggleFilter(this, 'power')">Power</div>
         <div class="filter-chip" onclick="toggleFilter(this, 'quiet')">Quiet</div>
@@ -1376,12 +1378,13 @@
                 4 min walk
               </span>
               <span class="wifi-badge fast">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                  <circle cx="12" cy="20" r="1"/>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-                Fast · Great for calls
+                Fast
               </span>
             </div>
             <div class="venue-footer">
@@ -1428,12 +1431,13 @@
                 7 min walk
               </span>
               <span class="wifi-badge fast">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                  <circle cx="12" cy="20" r="1"/>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-                Fast · Great for calls
+                Fast
               </span>
             </div>
             <div class="venue-footer">
@@ -1480,11 +1484,12 @@
                 5 min walk
               </span>
               <span class="wifi-badge fine">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                  <circle cx="12" cy="20" r="1"/>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-                Fine · Basic browsing
+                OK
               </span>
             </div>
             <div class="venue-footer">
@@ -1531,12 +1536,13 @@
                 9 min walk
               </span>
               <span class="wifi-badge fast">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                  <circle cx="12" cy="20" r="1"/>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-                Fast · Great for calls
+                Fast
               </span>
             </div>
             <div class="venue-footer">
@@ -1583,12 +1589,13 @@
                 14 min walk
               </span>
               <span class="wifi-badge fast">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                  <circle cx="12" cy="20" r="1"/>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-                Fast · Great for calls
+                Fast
               </span>
             </div>
             <div class="venue-footer">
@@ -1635,11 +1642,12 @@
                 18 min walk
               </span>
               <span class="wifi-badge fine">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                  <circle cx="12" cy="20" r="1"/>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                  <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-                Fine · Basic browsing
+                OK
               </span>
             </div>
             <div class="venue-footer">
@@ -1809,6 +1817,7 @@
       }
     } catch (e) {
       activeFilters = {
+        'calls-ok': false,
         'fast-wifi': false,
         'power': false,
         'quiet': false,
@@ -1872,6 +1881,11 @@
 
         // Walk time filter
         if (walkFilterActive && walkTime > 10) {
+          shouldShow = false;
+        }
+
+        // Calls OK filter (fast wifi + not quiet)
+        if (activeFilters['calls-ok'] && (wifi !== 'fast' || isQuiet)) {
           shouldShow = false;
         }
 
@@ -2352,6 +2366,9 @@
 
         // Walk time filter
         if (walkFilterActive && venue.walk > 10) return false;
+
+        // Calls OK filter (fast wifi + not quiet)
+        if (activeFilters['calls-ok'] && (venue.wifi !== 'fast' || venue.quiet)) return false;
 
         // Fast WiFi filter
         if (activeFilters['fast-wifi'] && venue.wifi !== 'fast') return false;

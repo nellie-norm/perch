@@ -515,12 +515,13 @@
 
       <div class="venue-tags" id="venue-tags">
         <span class="venue-tag" id="wifi-tag" style="background: #E3F2E8; color: #1B7340;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-            <circle cx="12" cy="20" r="1"/>
+          <svg viewBox="0 0 24 24" fill="currentColor" id="wifi-icon">
+            <path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+            <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
           </svg>
-          <span id="wifi-text">Fast WiFi · Great for calls</span>
+          <span id="wifi-text">Fast</span>
         </span>
         <span class="venue-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -847,14 +848,17 @@
       // Update WiFi badge
       const wifiTag = document.getElementById('wifi-tag');
       const wifiText = document.getElementById('wifi-text');
+      const wifiIcon = document.getElementById('wifi-icon');
       if (venue.wifi === 'fast') {
         wifiTag.style.background = '#E3F2E8';
         wifiTag.style.color = '#1B7340';
-        wifiText.textContent = 'Fast WiFi · Great for calls';
+        wifiText.textContent = 'Fast';
+        wifiIcon.innerHTML = '<path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/><path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M1.5 9.5a13 13 0 0 1 21 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>';
       } else {
         wifiTag.style.background = '#FFF4E5';
         wifiTag.style.color = '#B86E00';
-        wifiText.textContent = 'Fine WiFi · Basic browsing';
+        wifiText.textContent = 'OK';
+        wifiIcon.innerHTML = '<path d="M12 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/><path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M5 13a9 9 0 0 1 14 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>';
       }
 
       // Update gallery images
