@@ -529,6 +529,12 @@
             // Reverse geocode (simplified - in production use a geocoding API)
             reverseGeocode(lat, lng).then(address => {
               input.value = address;
+
+              // Also save as search location so it persists to results page
+              localStorage.setItem('searchLocationName', address);
+              localStorage.setItem('searchLocationLat', lat);
+              localStorage.setItem('searchLocationLng', lng);
+
               btn.classList.remove('loading');
               btn.innerHTML = `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -767,6 +773,35 @@
       if (!e.target.closest('#location-input-group')) {
         locationSuggestions.classList.remove('show');
       }
+    });
+
+    // Popular neighborhood coordinates (London)
+    const neighborhoods = {
+      'Shoreditch': { lat: 51.5245, lng: -0.0760 },
+      'Soho': { lat: 51.5137, lng: -0.1337 },
+      'Clerkenwell': { lat: 51.5225, lng: -0.1020 },
+      'Fitzrovia': { lat: 51.5195, lng: -0.1385 },
+      'King\'s Cross': { lat: 51.5308, lng: -0.1238 }
+    };
+
+    // Add click handlers to neighborhood tags
+    document.querySelectorAll('.popular-tag').forEach(tag => {
+      tag.style.cursor = 'pointer';
+      tag.addEventListener('click', () => {
+        const name = tag.textContent;
+        const coords = neighborhoods[name];
+        if (coords) {
+          locationInput.value = name + ', London';
+          localStorage.setItem('searchLocationName', name + ', London');
+          localStorage.setItem('searchLocationLat', coords.lat);
+          localStorage.setItem('searchLocationLng', coords.lng);
+          localStorage.setItem('userLat', coords.lat);
+          localStorage.setItem('userLng', coords.lng);
+
+          // Navigate to results
+          window.location.href = 'results.html';
+        }
+      });
     });
   </script>
 </body>
