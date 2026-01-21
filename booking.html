@@ -865,7 +865,7 @@
     // Initialize EmailJS
     emailjs.init('I2Jsu6HwY3b2r74hs');
 
-    // Send confirmation email
+    // Send confirmation email to customer
     async function sendConfirmationEmail(booking) {
       try {
         await emailjs.send('service_nt1ujbi', 'template_confirmation', {
@@ -882,7 +882,34 @@
         console.log('Confirmation email sent');
       } catch (error) {
         console.error('Email failed:', error);
-        // Don't block booking if email fails
+      }
+    }
+
+    // Send notification email to venue with check-in link
+    async function sendVenueNotificationEmail(booking) {
+      // Skip if venue has no email
+      if (!booking.venue.email) {
+        console.log('No venue email configured, skipping notification');
+        return;
+      }
+
+      const checkinUrl = `${window.location.origin}/checkin.html?ref=${booking.reference}`;
+
+      try {
+        await emailjs.send('service_nt1ujbi', 'template_venue_booking', {
+          to_email: booking.venue.email,
+          venue_name: booking.venue.name,
+          guest_name: booking.user.name,
+          booking_ref: booking.reference,
+          booking_date: new Date(booking.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+          booking_time: booking.time,
+          duration: booking.duration,
+          people: booking.people,
+          checkin_link: checkinUrl
+        });
+        console.log('Venue notification email sent');
+      } catch (error) {
+        console.error('Venue email failed:', error.text || error);
       }
     }
 
@@ -920,12 +947,23 @@
     // Save booking to Firestore
     async function saveBooking() {
       const confirmBtn = document.querySelector('.confirm-btn');
-      const venueData = JSON.parse(localStorage.getItem('currentVenue') || '{}');
+      const cachedVenue = JSON.parse(localStorage.getItem('currentVenue') || '{}');
 
       // Validation
-      if (!venueData.id) {
+      if (!cachedVenue.id) {
         showToast('Missing venue information. Please go back and try again.', 'error');
         return;
+      }
+
+      // Fetch fresh venue data from Firestore (ensures we have latest email, etc.)
+      let venueData = cachedVenue;
+      try {
+        const venueDoc = await getDoc(doc(db, 'venues', cachedVenue.id));
+        if (venueDoc.exists()) {
+          venueData = { id: venueDoc.id, ...venueDoc.data() };
+        }
+      } catch (error) {
+        console.warn('Could not fetch fresh venue data, using cached:', error);
       }
 
       // Guest validation (if not logged in)
@@ -980,6 +1018,7 @@
           name: venueData.name,
           address: venueData.address,
           phone: venueData.phone,
+          email: venueData.email || null,
           gradient: venueData.gradient
         },
         date: dateStr,
@@ -1028,8 +1067,11 @@
         // Store booking ref for confirmation page
         localStorage.setItem('lastBookingRef', bookingRef);
 
-        // Send confirmation email before navigating
-        await sendConfirmationEmail(booking);
+        // Send emails (customer confirmation + venue notification) in parallel
+        await Promise.all([
+          sendConfirmationEmail(booking),
+          sendVenueNotificationEmail(booking)
+        ]);
 
         // Navigate to confirmation
         window.location.href = 'confirmation.html';

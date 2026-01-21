@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Leave a Review - Perch</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .review-page {
+      min-height: 100vh;
+      background: var(--background);
+      padding: 24px;
+      padding-bottom: 100px;
+    }
+
+    .review-header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-top: 20px;
+    }
+
+    .review-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .review-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+    }
+
+    .venue-card-mini {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .venue-image-mini {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #8B7355 0%, #D4A574 100%);
+      flex-shrink: 0;
+    }
+
+    .venue-info-mini h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .venue-info-mini p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .review-section {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .star-rating {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .star-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .star-btn svg {
+      width: 40px;
+      height: 40px;
+      color: var(--border);
+      fill: var(--border);
+      transition: all 0.15s;
+    }
+
+    .star-btn.active svg {
+      color: #FFC107;
+      fill: #FFC107;
+    }
+
+    .star-btn:hover svg {
+      color: #FFD54F;
+      fill: #FFD54F;
+    }
+
+    .rating-label {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      min-height: 20px;
+    }
+
+    .review-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: vertical;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    .review-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .review-textarea::placeholder {
+      color: var(--text-light);
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 8px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .success-state {
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: scaleIn 0.4s ease-out;
+    }
+
+    .success-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    @keyframes scaleIn {
+      0% { transform: scale(0); }
+      60% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .success-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .success-message {
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .back-home-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--primary);
+      color: white;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      background: #dc3545;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    .error-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="review-page">
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading your visit...</p>
+    </div>
+
+    <!-- Review Form -->
+    <div id="review-form" class="hidden">
+      <div class="review-header">
+        <h1 class="review-title">How was your visit?</h1>
+        <p class="review-subtitle">Your feedback helps others find great spots</p>
+      </div>
+
+      <div class="venue-card-mini">
+        <div class="venue-image-mini" id="venue-image"></div>
+        <div class="venue-info-mini">
+          <h3 id="venue-name">-</h3>
+          <p id="visit-date">-</p>
+        </div>
+      </div>
+
+      <div class="review-section">
+        <div class="section-label">Rating</div>
+        <div class="star-rating">
+          <button class="star-btn" data-rating="1" onclick="setRating(1)">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button class="star-btn" data-rating="2" onclick="setRating(2)">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button class="star-btn" data-rating="3" onclick="setRating(3)">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button class="star-btn" data-rating="4" onclick="setRating(4)">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button class="star-btn" data-rating="5" onclick="setRating(5)">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+        </div>
+        <div class="rating-label" id="rating-label"></div>
+      </div>
+
+      <div class="review-section">
+        <div class="section-label">Your review (optional)</div>
+        <textarea class="review-textarea" id="review-text" placeholder="What did you like? How was the wifi, seating, atmosphere?" maxlength="500" oninput="updateCharCount()"></textarea>
+        <div class="char-count"><span id="char-count">0</span>/500</div>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitReview()" disabled>
+        Submit review
+      </button>
+    </div>
+
+    <!-- Success State -->
+    <div id="success-state" class="success-state hidden">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Thanks for your review!</h2>
+      <p class="success-message">Your feedback helps the Perch community find great workspaces.</p>
+      <a href="index.html" class="back-home-btn">Back to Perch</a>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-state hidden">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Can't load this review</h2>
+      <p class="success-message" id="error-message">This review link may have expired or the booking wasn't found.</p>
+      <a href="index.html" class="back-home-btn">Back to Perch</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const params = new URLSearchParams(window.location.search);
+    const bookingRef = params.get('ref');
+
+    let bookingData = null;
+    let selectedRating = 0;
+
+    const ratingLabels = {
+      1: 'Poor',
+      2: 'Fair',
+      3: 'Good',
+      4: 'Very good',
+      5: 'Excellent'
+    };
+
+    function showState(stateId) {
+      ['loading-state', 'review-form', 'success-state', 'error-state'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(stateId).classList.remove('hidden');
+    }
+
+    window.setRating = function(rating) {
+      selectedRating = rating;
+      document.querySelectorAll('.star-btn').forEach((btn, index) => {
+        btn.classList.toggle('active', index < rating);
+      });
+      document.getElementById('rating-label').textContent = ratingLabels[rating];
+      document.getElementById('submit-btn').disabled = false;
+    };
+
+    window.updateCharCount = function() {
+      const text = document.getElementById('review-text').value;
+      document.getElementById('char-count').textContent = text.length;
+    };
+
+    window.submitReview = async function() {
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      try {
+        const reviewText = document.getElementById('review-text').value.trim();
+
+        // Create review document
+        const reviewData = {
+          bookingRef: bookingRef,
+          venueId: bookingData.venue?.id,
+          venueName: bookingData.venue?.name,
+          userId: bookingData.user?.id || null,
+          userName: bookingData.user?.name || 'Anonymous',
+          rating: selectedRating,
+          text: reviewText,
+          visitDate: bookingData.date,
+          createdAt: serverTimestamp()
+        };
+
+        // Save to reviews collection
+        await setDoc(doc(db, 'reviews', `${bookingRef}_review`), reviewData);
+
+        // Mark booking as reviewed
+        await updateDoc(doc(db, 'bookings', bookingRef), {
+          reviewed: true,
+          reviewedAt: serverTimestamp()
+        });
+
+        showState('success-state');
+      } catch (error) {
+        console.error('Error submitting review:', error);
+        btn.disabled = false;
+        btn.textContent = 'Submit review';
+        alert('Failed to submit review. Please try again.');
+      }
+    };
+
+    async function loadBooking() {
+      if (!bookingRef) {
+        showState('error-state');
+        document.getElementById('error-message').textContent = 'No booking reference provided.';
+        return;
+      }
+
+      try {
+        const bookingDoc = await getDoc(doc(db, 'bookings', bookingRef));
+
+        if (!bookingDoc.exists()) {
+          showState('error-state');
+          return;
+        }
+
+        bookingData = bookingDoc.data();
+
+        // Check if already reviewed
+        if (bookingData.reviewed) {
+          showState('error-state');
+          document.getElementById('error-message').textContent = 'You\'ve already reviewed this visit. Thanks!';
+          return;
+        }
+
+        // Check if booking was checked in (they actually visited)
+        if (bookingData.status !== 'checked_in') {
+          showState('error-state');
+          document.getElementById('error-message').textContent = 'This booking wasn\'t checked in, so we can\'t collect a review.';
+          return;
+        }
+
+        // Populate venue info
+        document.getElementById('venue-name').textContent = bookingData.venue?.name || 'Venue';
+        document.getElementById('visit-date').textContent = new Date(bookingData.date).toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long'
+        });
+
+        // Set gradient if available
+        if (bookingData.venue?.gradient) {
+          document.getElementById('venue-image').style.background = bookingData.venue.gradient;
+        }
+
+        showState('review-form');
+      } catch (error) {
+        console.error('Error loading booking:', error);
+        showState('error-state');
+      }
+    }
+
+    loadBooking();
+  </script>
+</body>
+</html>

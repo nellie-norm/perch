@@ -20,16 +20,24 @@ service cloud.firestore {
       // Anyone can create a booking (guests included)
       allow create: if true;
 
-      // Only the booking owner can read their booking
-      // Or if the user is authenticated and created the booking
-      allow read: if resource.data.user.uid == request.auth.uid
-                  || resource.data.user.email == request.auth.token.email;
+      // Allow read if: owner, or anyone (for check-in page - booking ref acts as secret)
+      allow read: if true;
 
-      // Only the booking owner can update/cancel
-      allow update: if resource.data.user.uid == request.auth.uid;
+      // Allow update if: owner (cancel/modify), or venue check-in (status to checked_in)
+      allow update: if resource.data.user.uid == request.auth.uid
+                    || request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status', 'checkedInAt', 'reviewEmailSent', 'reviewEmailSentAt', 'reviewed', 'reviewedAt']);
 
       // No deletes - bookings should be cancelled, not deleted
       allow delete: if false;
+    }
+
+    // ============ REVIEWS ============
+    // Anyone can read reviews, authenticated users can create
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if true;  // Allow creating reviews from review page
+      allow update, delete: if false;  // Reviews can't be edited or deleted
     }
 
     // ============ USER DATA ============

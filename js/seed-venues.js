@@ -26,6 +26,7 @@ const venueData = [
     seats: 14,
     closes: '6pm',
     phone: '020 7749 1780',
+    email: 'nellie.norman@gmail.com', // Add venue email for booking notifications
     gradient: 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)',
     image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800',
     active: true
@@ -48,6 +49,7 @@ const venueData = [
     seats: 22,
     closes: '5pm',
     phone: '020 7490 1039',
+    email: 'nellie.norman@gmail.com',
     gradient: 'linear-gradient(135deg, #5D6D7E 0%, #85929E 100%)',
     image: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800',
     active: true
@@ -70,6 +72,7 @@ const venueData = [
     seats: 35,
     closes: '10pm',
     phone: '020 7550 1000',
+    email: 'nellie.norman@gmail.com',
     gradient: 'linear-gradient(135deg, #7D6B5D 0%, #A89080 100%)',
     image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
     active: true
@@ -92,6 +95,7 @@ const venueData = [
     seats: 18,
     closes: '9pm',
     phone: '020 7253 1025',
+    email: 'nellie.norman@gmail.com',
     gradient: 'linear-gradient(135deg, #6B7D5D 0%, #90A880 100%)',
     image: 'https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=800',
     active: true
@@ -114,6 +118,7 @@ const venueData = [
     seats: 40,
     closes: '10:30pm',
     phone: '020 7101 7661',
+    email: 'nellie.norman@gmail.com',
     gradient: 'linear-gradient(135deg, #5D7D8E 0%, #7DA0B0 100%)',
     image: 'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800',
     active: true
@@ -136,6 +141,7 @@ const venueData = [
     seats: 12,
     closes: '5:30pm',
     phone: '020 7637 3794',
+    email: 'nellie.norman@gmail.com',
     gradient: 'linear-gradient(135deg, #8D6D7E 0%, #A08090 100%)',
     image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800',
     active: true
