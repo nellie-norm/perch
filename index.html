@@ -535,6 +535,10 @@
               localStorage.setItem('searchLocationLat', lat);
               localStorage.setItem('searchLocationLng', lng);
 
+              // Clear saved map position so map centers on new location
+              localStorage.removeItem('mapCenterLat');
+              localStorage.removeItem('mapCenterLng');
+
               btn.classList.remove('loading');
               btn.innerHTML = `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -766,6 +770,10 @@
       localStorage.setItem('searchLocationLng', lng);
       localStorage.setItem('userLat', lat);
       localStorage.setItem('userLng', lng);
+
+      // Clear saved map position so map centers on new location
+      localStorage.removeItem('mapCenterLat');
+      localStorage.removeItem('mapCenterLng');
     }
 
     // Close suggestions when clicking outside
@@ -797,6 +805,10 @@
           localStorage.setItem('searchLocationLng', coords.lng);
           localStorage.setItem('userLat', coords.lat);
           localStorage.setItem('userLng', coords.lng);
+
+          // Clear saved map position so map centers on new location
+          localStorage.removeItem('mapCenterLat');
+          localStorage.removeItem('mapCenterLng');
 
           // Navigate to results
           window.location.href = 'results.html';
