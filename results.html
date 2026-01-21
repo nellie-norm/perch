@@ -609,6 +609,29 @@
       height: 100%;
     }
 
+    .map-layer-toggle {
+      background: none;
+      border: none;
+    }
+
+    .map-layer-toggle button {
+      background: var(--card);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.2s;
+    }
+
+    .map-layer-toggle button:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
     .list-container.hidden {
       display: none;
     }
@@ -973,6 +996,11 @@
       display: block;
     }
 
+    .meta-dropdown-scroll {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
     .meta-option {
       padding: 8px 14px;
       font-size: 13px;
@@ -1143,17 +1171,40 @@
             <div class="meta-selector" id="time-selector">
               <span class="meta-value" id="time-value">2:00 PM</span>
               <svg class="meta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6"/></svg>
-              <div class="meta-dropdown" id="time-dropdown">
+              <div class="meta-dropdown meta-dropdown-scroll" id="time-dropdown">
+                <div class="meta-option" data-value="6:00 AM">6:00 AM</div>
+                <div class="meta-option" data-value="6:30 AM">6:30 AM</div>
+                <div class="meta-option" data-value="7:00 AM">7:00 AM</div>
+                <div class="meta-option" data-value="7:30 AM">7:30 AM</div>
+                <div class="meta-option" data-value="8:00 AM">8:00 AM</div>
+                <div class="meta-option" data-value="8:30 AM">8:30 AM</div>
                 <div class="meta-option" data-value="9:00 AM">9:00 AM</div>
+                <div class="meta-option" data-value="9:30 AM">9:30 AM</div>
                 <div class="meta-option" data-value="10:00 AM">10:00 AM</div>
+                <div class="meta-option" data-value="10:30 AM">10:30 AM</div>
                 <div class="meta-option" data-value="11:00 AM">11:00 AM</div>
+                <div class="meta-option" data-value="11:30 AM">11:30 AM</div>
                 <div class="meta-option" data-value="12:00 PM">12:00 PM</div>
+                <div class="meta-option" data-value="12:30 PM">12:30 PM</div>
                 <div class="meta-option" data-value="1:00 PM">1:00 PM</div>
+                <div class="meta-option" data-value="1:30 PM">1:30 PM</div>
                 <div class="meta-option" data-value="2:00 PM">2:00 PM</div>
+                <div class="meta-option" data-value="2:30 PM">2:30 PM</div>
                 <div class="meta-option" data-value="3:00 PM">3:00 PM</div>
+                <div class="meta-option" data-value="3:30 PM">3:30 PM</div>
                 <div class="meta-option" data-value="4:00 PM">4:00 PM</div>
+                <div class="meta-option" data-value="4:30 PM">4:30 PM</div>
                 <div class="meta-option" data-value="5:00 PM">5:00 PM</div>
+                <div class="meta-option" data-value="5:30 PM">5:30 PM</div>
                 <div class="meta-option" data-value="6:00 PM">6:00 PM</div>
+                <div class="meta-option" data-value="6:30 PM">6:30 PM</div>
+                <div class="meta-option" data-value="7:00 PM">7:00 PM</div>
+                <div class="meta-option" data-value="7:30 PM">7:30 PM</div>
+                <div class="meta-option" data-value="8:00 PM">8:00 PM</div>
+                <div class="meta-option" data-value="8:30 PM">8:30 PM</div>
+                <div class="meta-option" data-value="9:00 PM">9:00 PM</div>
+                <div class="meta-option" data-value="9:30 PM">9:30 PM</div>
+                <div class="meta-option" data-value="10:00 PM">10:00 PM</div>
               </div>
             </div>
             <span class="meta-separator">·</span>
@@ -1862,6 +1913,17 @@
           // Toggle this one
           if (!wasOpen) {
             selector.classList.add('open');
+            // Scroll to selected option (centered)
+            const dropdown = selector.querySelector('.meta-dropdown');
+            const selected = dropdown.querySelector('.meta-option.selected');
+            if (selected && dropdown.classList.contains('meta-dropdown-scroll')) {
+              setTimeout(() => {
+                const dropdownHeight = dropdown.clientHeight;
+                const optionTop = selected.offsetTop;
+                const optionHeight = selected.clientHeight;
+                dropdown.scrollTop = optionTop - (dropdownHeight / 2) + (optionHeight / 2);
+              }, 0);
+            }
           }
         });
       });
@@ -2093,10 +2155,45 @@
 
       map = L.map('map').setView([mapLat, mapLng], mapZoom);
 
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+      // Map tile layers
+      const tileLayers = {
+        original: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }),
+        minimal: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap, © CARTO'
+        })
+      };
+
+      const layerNames = ['minimal', 'original'];
+      const layerLabels = { minimal: 'Minimal', original: 'Original' };
+      let currentLayerIndex = layerNames.indexOf(localStorage.getItem('mapStyle') || 'minimal');
+      if (currentLayerIndex === -1) currentLayerIndex = 0;
+
+      // Add initial layer
+      tileLayers[layerNames[currentLayerIndex]].addTo(map);
+
+      // Add layer toggle button
+      const layerToggle = L.control({ position: 'topright' });
+      layerToggle.onAdd = function() {
+        const div = L.DomUtil.create('div', 'map-layer-toggle');
+        div.innerHTML = `<button id="layer-toggle-btn">${layerLabels[layerNames[currentLayerIndex]]}</button>`;
+        div.onclick = function(e) {
+          e.stopPropagation();
+          // Remove current layer
+          map.removeLayer(tileLayers[layerNames[currentLayerIndex]]);
+          // Cycle to next
+          currentLayerIndex = (currentLayerIndex + 1) % layerNames.length;
+          // Add new layer
+          tileLayers[layerNames[currentLayerIndex]].addTo(map);
+          // Update button text
+          document.getElementById('layer-toggle-btn').textContent = layerLabels[layerNames[currentLayerIndex]];
+          // Save preference
+          localStorage.setItem('mapStyle', layerNames[currentLayerIndex]);
+        };
+        return div;
+      };
+      layerToggle.addTo(map);
 
       // Save map position when user moves/zooms
       map.on('moveend', () => {
