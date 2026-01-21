@@ -1449,12 +1449,12 @@
 
     // Venue data with coordinates (Shoreditch/East London area)
     const venues = [
-      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast' },
-      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast' },
-      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine' },
-      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast' },
-      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast' },
-      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine' }
+      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast', power: true, quiet: false },
+      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast', power: true, quiet: false },
+      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine', power: true, quiet: true },
+      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast', power: true, quiet: false },
+      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast', power: true, quiet: false },
+      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine', power: true, quiet: true }
     ];
 
     let map = null;
@@ -1849,10 +1849,25 @@
       markers.forEach(m => map.removeLayer(m));
       markers = [];
 
-      // Filter venues based on walk filter
-      const filteredVenues = walkFilterActive
-        ? venues.filter(v => v.walk <= 10)
-        : venues;
+      // Filter venues based on all active filters (same logic as filterVenues)
+      const filteredVenues = venues.filter(venue => {
+        // Walk time filter
+        if (walkFilterActive && venue.walk > 10) return false;
+
+        // Fast WiFi filter
+        if (activeFilters['fast-wifi'] && venue.wifi !== 'fast') return false;
+
+        // Power filter
+        if (activeFilters['power'] && !venue.power) return false;
+
+        // Quiet filter
+        if (activeFilters['quiet'] && !venue.quiet) return false;
+
+        // Under £10 filter
+        if (activeFilters['under10'] && venue.price >= 10) return false;
+
+        return true;
+      });
 
       // Add markers for each venue
       filteredVenues.forEach(venue => {
