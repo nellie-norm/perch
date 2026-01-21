@@ -81,10 +81,11 @@
     .filter-bar {
       display: flex;
       gap: 8px;
-      overflow-x: auto;
+      flex-wrap: wrap;
       padding-bottom: 8px;
       margin-bottom: 16px;
-      scrollbar-width: none;
+      position: relative;
+      z-index: 100;
     }
 
     .filter-bar::-webkit-scrollbar {
@@ -116,6 +117,53 @@
     .filter-chip svg {
       width: 14px;
       height: 14px;
+    }
+
+    .sort-chip {
+      position: relative;
+    }
+
+    .sort-chip .sort-arrow {
+      transition: transform 0.2s;
+    }
+
+    .sort-chip.open .sort-arrow {
+      transform: rotate(180deg);
+    }
+
+    .sort-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--card);
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      padding: 6px 0;
+      min-width: 120px;
+      display: none;
+      z-index: 500;
+    }
+
+    .sort-chip.open .sort-dropdown {
+      display: block;
+    }
+
+    .sort-option {
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .sort-option:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .sort-option.active {
+      color: var(--primary);
+      font-weight: 600;
     }
 
     .results-count {
@@ -569,13 +617,17 @@
       gap: 6px;
       padding: 10px 16px;
       border: none;
-      background: transparent;
+      background: rgba(0,0,0,0.03);
       font-size: 14px;
       font-weight: 500;
       color: var(--text-secondary);
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
+    }
+
+    .view-toggle-btn:hover:not(.active) {
+      background: rgba(0,0,0,0.06);
     }
 
     .view-toggle-btn.active {
@@ -1228,7 +1280,7 @@
       </div>
 
       <div class="filter-bar animate-in">
-        <div class="filter-chip active">
+        <div class="filter-chip sort-chip" id="sort-chip" onclick="toggleSortDropdown(event)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="4" y1="21" x2="4" y2="14"/>
             <line x1="4" y1="10" x2="4" y2="3"/>
@@ -1237,7 +1289,13 @@
             <line x1="20" y1="21" x2="20" y2="16"/>
             <line x1="20" y1="12" x2="20" y2="3"/>
           </svg>
-          Filters
+          <span id="sort-label">Sort</span>
+          <svg class="sort-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6"/></svg>
+          <div class="sort-dropdown" id="sort-dropdown">
+            <div class="sort-option" data-sort="default" onclick="event.stopPropagation(); sortVenues('default')">Default</div>
+            <div class="sort-option" data-sort="nearest" onclick="event.stopPropagation(); sortVenues('nearest')">Nearest</div>
+            <div class="sort-option" data-sort="cheapest" onclick="event.stopPropagation(); sortVenues('cheapest')">Cheapest</div>
+          </div>
         </div>
         <div class="filter-chip" onclick="toggleFilter(this, 'fast-wifi')">Fast WiFi</div>
         <div class="filter-chip" onclick="toggleFilter(this, 'power')">Power</div>
@@ -1247,8 +1305,7 @@
 
       <div class="walk-filter animate-in">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--primary)">
-          <path d="M13 4v16M13 4l-4 4M13 4l4 4M6 20h12"/>
-          <circle cx="13" cy="2" r="1"/>
+          <path d="M12 3v18M12 3L7 8M12 3l5 5M12 21l-5-5M12 21l5-5"/>
         </svg>
         <span class="walk-filter-label">Only show places within 10 min walk</span>
         <div class="walk-filter-toggle" id="walk-toggle" onclick="toggleWalkFilter()"></div>
@@ -1856,6 +1913,63 @@
       filterVenues();
     }
 
+    // Sort dropdown
+    let currentSort = localStorage.getItem('venueSort') || 'default';
+
+    function toggleSortDropdown(e) {
+      e.stopPropagation();
+      const chip = document.getElementById('sort-chip');
+      chip.classList.toggle('open');
+    }
+
+    function sortVenues(sortType) {
+      currentSort = sortType;
+      localStorage.setItem('venueSort', sortType);
+
+      // Update UI
+      document.querySelectorAll('.sort-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.sort === sortType);
+      });
+
+      const labels = { default: 'Sort', nearest: 'Nearest', cheapest: 'Cheapest' };
+      document.getElementById('sort-label').textContent = labels[sortType];
+      document.getElementById('sort-chip').classList.remove('open');
+
+      // Get the grid and cards
+      const grid = document.getElementById('venues-grid');
+      const cards = Array.from(grid.querySelectorAll('.venue-card'));
+
+      // Sort cards
+      cards.sort((a, b) => {
+        if (sortType === 'nearest') {
+          return parseInt(a.dataset.walk) - parseInt(b.dataset.walk);
+        } else if (sortType === 'cheapest') {
+          return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+        }
+        // Default: by data-id (original order)
+        return a.dataset.id.localeCompare(b.dataset.id);
+      });
+
+      // Re-append in new order
+      cards.forEach(card => grid.appendChild(card));
+    }
+
+    // Close sort dropdown when clicking outside
+    document.addEventListener('click', () => {
+      document.getElementById('sort-chip').classList.remove('open');
+    });
+
+    // Initialize sort on load
+    function initSort() {
+      const saved = localStorage.getItem('venueSort') || 'default';
+      if (saved !== 'default') {
+        sortVenues(saved);
+      }
+      document.querySelectorAll('.sort-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.sort === saved);
+      });
+    }
+
     // Update search meta display
     // Meta selectors (date, time, people)
     function initMetaSelectors() {
@@ -1970,6 +2084,7 @@
     restoreFilterState();
     initMetaSelectors();
     filterVenues();
+    initSort();
 
     // Venue gradients for favourites
     const venueGradients = {
@@ -2651,6 +2766,8 @@
     window.showToast = showToast;
     window.showLoading = showLoading;
     window.hideLoading = hideLoading;
+    window.toggleSortDropdown = toggleSortDropdown;
+    window.sortVenues = sortVenues;
   </script>
 </body>
 </html>
