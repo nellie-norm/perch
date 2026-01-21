@@ -1024,7 +1024,7 @@
           <circle cx="13" cy="2" r="1"/>
         </svg>
         <span class="walk-filter-label">Only show places within 10 min walk</span>
-        <div class="walk-filter-toggle active" id="walk-toggle" onclick="toggleWalkFilter()"></div>
+        <div class="walk-filter-toggle" id="walk-toggle" onclick="toggleWalkFilter()"></div>
       </div>
 
       <!-- View Toggle -->
@@ -1271,7 +1271,7 @@
         <div class="venue-card animate-in" data-id="caravan" data-walk="14" data-wifi="fast" data-price="9" onclick="window.location.href='venue.html?id=caravan'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
-            <button class="favourite-btn" onclick="toggleFavourite(event, 'caravan', 'Caravan King\\'s Cross')">
+            <button class="favourite-btn" onclick="toggleFavourite(event, 'caravan', 'Caravan King&#39;s Cross')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
@@ -1515,24 +1515,44 @@
     // Walk time filter - load from localStorage or default to true
     let walkFilterActive = localStorage.getItem('walkFilterActive') !== 'false';
 
-    // Active filters tracking - load from localStorage
-    let activeFilters = JSON.parse(localStorage.getItem('activeFilters')) || {
-      'fast-wifi': false,
-      'power': false,
-      'quiet': false,
-      'under10': false
-    };
+    // Active filters tracking - load from localStorage with validation
+    let activeFilters;
+    try {
+      activeFilters = JSON.parse(localStorage.getItem('activeFilters'));
+      if (!activeFilters || typeof activeFilters !== 'object') {
+        throw new Error('Invalid filters');
+      }
+    } catch (e) {
+      activeFilters = {
+        'fast-wifi': false,
+        'power': false,
+        'quiet': false,
+        'under10': false
+      };
+      localStorage.setItem('activeFilters', JSON.stringify(activeFilters));
+    }
 
     // Restore filter UI state on load
     function restoreFilterState() {
       const toggle = document.getElementById('walk-toggle');
-      toggle.classList.toggle('active', walkFilterActive);
+      if (toggle) {
+        if (walkFilterActive) {
+          toggle.classList.add('active');
+        } else {
+          toggle.classList.remove('active');
+        }
+      }
 
-      // Restore chip states
+      // Restore chip states - both add AND remove active class
       document.querySelectorAll('.filter-chip[onclick*="toggleFilter"]').forEach(chip => {
         const match = chip.getAttribute('onclick').match(/toggleFilter\(this,\s*'([^']+)'\)/);
-        if (match && activeFilters[match[1]]) {
-          chip.classList.add('active');
+        if (match) {
+          const filterKey = match[1];
+          if (activeFilters[filterKey]) {
+            chip.classList.add('active');
+          } else {
+            chip.classList.remove('active');
+          }
         }
       });
     }
@@ -1942,6 +1962,10 @@
       const banner = document.getElementById('location-banner');
       const status = document.getElementById('location-status');
       const btn = document.getElementById('location-btn');
+
+      // Exit early if elements don't exist
+      if (!banner || !status || !btn) return;
+
       const hasLocation = localStorage.getItem('userLat') && localStorage.getItem('userLng');
 
       if (hasLocation) {
@@ -1958,8 +1982,10 @@
     // Request user location
     function requestLocation() {
       const btn = document.getElementById('location-btn');
-      btn.textContent = 'Finding...';
-      btn.disabled = true;
+      if (btn) {
+        btn.textContent = 'Finding...';
+        btn.disabled = true;
+      }
 
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -1999,20 +2025,26 @@
               updateMapMarkers();
             }
 
-            btn.textContent = 'Share Location';
-            btn.disabled = false;
+            if (btn) {
+              btn.textContent = 'Share Location';
+              btn.disabled = false;
+            }
           },
           (error) => {
             showToast('Unable to get location. Please check permissions.', 'error');
-            btn.textContent = 'Share Location';
-            btn.disabled = false;
+            if (btn) {
+              btn.textContent = 'Share Location';
+              btn.disabled = false;
+            }
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
       } else {
         showToast('Geolocation is not supported by your browser.', 'error');
-        btn.textContent = 'Share Location';
-        btn.disabled = false;
+        if (btn) {
+          btn.textContent = 'Share Location';
+          btn.disabled = false;
+        }
       }
     }
 
