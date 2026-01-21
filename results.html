@@ -2074,53 +2074,56 @@
     const locationInput = document.getElementById('location-search-input');
     const locationSuggestions = document.getElementById('location-suggestions');
 
-    // Load saved location or use default
-    const savedLocationName = localStorage.getItem('searchLocationName');
-    locationInput.value = savedLocationName || 'Shoreditch, London';
+    // Only setup location search if elements exist
+    if (locationInput && locationSuggestions) {
+      // Load saved location or use default
+      const savedLocationName = localStorage.getItem('searchLocationName');
+      locationInput.value = savedLocationName || 'Shoreditch, London';
 
-    // Debounced search as user types
-    locationInput.addEventListener('input', () => {
-      clearTimeout(searchTimeout);
-      const query = locationInput.value.trim();
+      // Debounced search as user types
+      locationInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        const query = locationInput.value.trim();
 
-      if (query.length < 2) {
-        locationSuggestions.classList.remove('show');
-        return;
-      }
-
-      // Show searching indicator
-      locationSuggestions.innerHTML = '<div class="location-searching">Searching...</div>';
-      locationSuggestions.classList.add('show');
-
-      searchTimeout = setTimeout(() => {
-        fetchLocationSuggestions(query);
-      }, 300);
-    });
-
-    // Hide suggestions on blur (with delay to allow click)
-    locationInput.addEventListener('blur', () => {
-      setTimeout(() => {
-        locationSuggestions.classList.remove('show');
-      }, 200);
-    });
-
-    // Show suggestions on focus if there's text
-    locationInput.addEventListener('focus', () => {
-      if (locationInput.value.trim().length >= 2) {
-        fetchLocationSuggestions(locationInput.value.trim());
-      }
-    });
-
-    // Search on Enter key
-    locationInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const firstSuggestion = locationSuggestions.querySelector('.location-suggestion');
-        if (firstSuggestion) {
-          firstSuggestion.click();
+        if (query.length < 2) {
+          locationSuggestions.classList.remove('show');
+          return;
         }
-      }
-    });
+
+        // Show searching indicator
+        locationSuggestions.innerHTML = '<div class="location-searching">Searching...</div>';
+        locationSuggestions.classList.add('show');
+
+        searchTimeout = setTimeout(() => {
+          fetchLocationSuggestions(query);
+        }, 300);
+      });
+
+      // Hide suggestions on blur (with delay to allow click)
+      locationInput.addEventListener('blur', () => {
+        setTimeout(() => {
+          locationSuggestions.classList.remove('show');
+        }, 200);
+      });
+
+      // Show suggestions on focus if there's text
+      locationInput.addEventListener('focus', () => {
+        if (locationInput.value.trim().length >= 2) {
+          fetchLocationSuggestions(locationInput.value.trim());
+        }
+      });
+
+      // Search on Enter key
+      locationInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const firstSuggestion = locationSuggestions.querySelector('.location-suggestion');
+          if (firstSuggestion) {
+            firstSuggestion.click();
+          }
+        }
+      });
+    }
 
     // Fetch suggestions from Nominatim
     async function fetchLocationSuggestions(query) {
@@ -2200,7 +2203,7 @@
 
     // Close suggestions when clicking outside
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.location-search-container')) {
+      if (locationSuggestions && !e.target.closest('.location-search-container')) {
         locationSuggestions.classList.remove('show');
       }
     });
