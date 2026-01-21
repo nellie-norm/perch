@@ -910,6 +910,88 @@
       white-space: nowrap;
     }
 
+    .search-meta-selectors {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
+    .meta-separator {
+      color: var(--text-light);
+      opacity: 0.5;
+    }
+
+    .meta-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .meta-selector:hover {
+      background: var(--bg);
+    }
+
+    .meta-value {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .meta-arrow {
+      color: var(--text-light);
+      opacity: 0.6;
+      transition: transform 0.2s;
+    }
+
+    .meta-selector.open .meta-arrow {
+      transform: rotate(180deg);
+    }
+
+    .meta-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 100px;
+      background: var(--card);
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      display: none;
+      padding: 6px 0;
+      margin-top: 4px;
+    }
+
+    .meta-selector.open .meta-dropdown {
+      display: block;
+    }
+
+    .meta-option {
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .meta-option:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .meta-option.selected {
+      color: var(--primary);
+      font-weight: 500;
+    }
+
     .location-suggestions {
       position: absolute;
       top: 100%;
@@ -1047,7 +1129,49 @@
             <circle cx="12" cy="10" r="3"/>
           </svg>
           <input type="text" class="location-search-input" id="location-search-input" placeholder="Search location..." autocomplete="off">
-          <span class="location-search-meta">Today · 2:00 PM</span>
+          <div class="search-meta-selectors">
+            <div class="meta-selector" id="date-selector">
+              <span class="meta-value" id="date-value">Today</span>
+              <svg class="meta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="meta-dropdown" id="date-dropdown">
+                <div class="meta-option" data-value="today">Today</div>
+                <div class="meta-option" data-value="tomorrow">Tomorrow</div>
+                <div class="meta-option" data-value="day-after">Day After</div>
+              </div>
+            </div>
+            <span class="meta-separator">·</span>
+            <div class="meta-selector" id="time-selector">
+              <span class="meta-value" id="time-value">2:00 PM</span>
+              <svg class="meta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="meta-dropdown" id="time-dropdown">
+                <div class="meta-option" data-value="9:00 AM">9:00 AM</div>
+                <div class="meta-option" data-value="10:00 AM">10:00 AM</div>
+                <div class="meta-option" data-value="11:00 AM">11:00 AM</div>
+                <div class="meta-option" data-value="12:00 PM">12:00 PM</div>
+                <div class="meta-option" data-value="1:00 PM">1:00 PM</div>
+                <div class="meta-option" data-value="2:00 PM">2:00 PM</div>
+                <div class="meta-option" data-value="3:00 PM">3:00 PM</div>
+                <div class="meta-option" data-value="4:00 PM">4:00 PM</div>
+                <div class="meta-option" data-value="5:00 PM">5:00 PM</div>
+                <div class="meta-option" data-value="6:00 PM">6:00 PM</div>
+              </div>
+            </div>
+            <span class="meta-separator">·</span>
+            <div class="meta-selector" id="people-selector">
+              <span class="meta-value" id="people-value">1 person</span>
+              <svg class="meta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="meta-dropdown" id="people-dropdown">
+                <div class="meta-option" data-value="1">1 person</div>
+                <div class="meta-option" data-value="2">2 people</div>
+                <div class="meta-option" data-value="3">3 people</div>
+                <div class="meta-option" data-value="4">4 people</div>
+                <div class="meta-option" data-value="5">5 people</div>
+                <div class="meta-option" data-value="6">6 people</div>
+                <div class="meta-option" data-value="7">7 people</div>
+                <div class="meta-option" data-value="8">8 people</div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="location-suggestions" id="location-suggestions"></div>
       </div>
@@ -1113,7 +1237,7 @@
       <div class="list-container" id="list-container">
       <div class="venues-grid" id="venues-grid">
         <!-- Venue 1: Allpress Espresso - 4 min walk, Fast WiFi -->
-        <div class="venue-card animate-in" data-id="allpress" data-walk="4" data-wifi="fast" data-price="7" onclick="window.location.href='venue.html?id=allpress'">
+        <div class="venue-card animate-in" data-id="allpress" data-walk="4" data-wifi="fast" data-price="7" data-seats="14" onclick="window.location.href='venue.html?id=allpress'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'allpress', 'Allpress Espresso')">
@@ -1165,7 +1289,7 @@
         </div>
 
         <!-- Venue 2: Ozone Coffee - 7 min walk, Fast WiFi -->
-        <div class="venue-card animate-in" data-id="ozone" data-walk="7" data-wifi="fast" data-price="8" onclick="window.location.href='venue.html?id=ozone'">
+        <div class="venue-card animate-in" data-id="ozone" data-walk="7" data-wifi="fast" data-price="8" data-seats="22" onclick="window.location.href='venue.html?id=ozone'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'ozone', 'Ozone Coffee Roasters')">
@@ -1217,7 +1341,7 @@
         </div>
 
         <!-- Venue 3: The Hoxton - 5 min walk, Fine WiFi -->
-        <div class="venue-card animate-in" data-id="hoxton" data-walk="5" data-wifi="fine" data-price="6" data-quiet="true" onclick="window.location.href='venue.html?id=hoxton'">
+        <div class="venue-card animate-in" data-id="hoxton" data-walk="5" data-wifi="fine" data-price="6" data-seats="35" data-quiet="true" onclick="window.location.href='venue.html?id=hoxton'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'hoxton', 'The Hoxton Lobby')">
@@ -1268,7 +1392,7 @@
         </div>
 
         <!-- Venue 4: Look Mum No Hands - 9 min walk, Fast WiFi -->
-        <div class="venue-card animate-in" data-id="lookmum" data-walk="9" data-wifi="fast" data-price="5" onclick="window.location.href='venue.html?id=lookmum'">
+        <div class="venue-card animate-in" data-id="lookmum" data-walk="9" data-wifi="fast" data-price="5" data-seats="18" onclick="window.location.href='venue.html?id=lookmum'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'lookmum', 'Look Mum No Hands!')">
@@ -1320,7 +1444,7 @@
         </div>
 
         <!-- Venue 5: Caravan King's Cross - 14 min walk, Fast WiFi -->
-        <div class="venue-card animate-in" data-id="caravan" data-walk="14" data-wifi="fast" data-price="9" onclick="window.location.href='venue.html?id=caravan'">
+        <div class="venue-card animate-in" data-id="caravan" data-walk="14" data-wifi="fast" data-price="9" data-seats="40" onclick="window.location.href='venue.html?id=caravan'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'caravan', 'Caravan King&#39;s Cross')">
@@ -1372,7 +1496,7 @@
         </div>
 
         <!-- Venue 6: Attendant Fitzrovia - 18 min walk, Fine WiFi -->
-        <div class="venue-card animate-in" data-id="attendant" data-walk="18" data-wifi="fine" data-price="6" data-quiet="true" onclick="window.location.href='venue.html?id=attendant'">
+        <div class="venue-card animate-in" data-id="attendant" data-walk="18" data-wifi="fine" data-price="6" data-seats="1" data-quiet="true" onclick="window.location.href='venue.html?id=attendant'">
           <div class="venue-image-container">
             <div class="venue-image"></div>
             <button class="favourite-btn" onclick="toggleFavourite(event, 'attendant', 'Attendant Fitzrovia')">
@@ -1474,12 +1598,12 @@
 
     // Venue data with coordinates (Shoreditch/East London area)
     const venues = [
-      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast', power: true, quiet: false },
-      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast', power: true, quiet: false },
-      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine', power: true, quiet: true },
-      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast', power: true, quiet: false },
-      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast', power: true, quiet: false },
-      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine', power: true, quiet: true }
+      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast', power: true, quiet: false, seats: 14 },
+      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast', power: true, quiet: false, seats: 22 },
+      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine', power: true, quiet: true, seats: 35 },
+      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast', power: true, quiet: false, seats: 18 },
+      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast', power: true, quiet: false, seats: 40 },
+      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine', power: true, quiet: true, seats: 1 }
     ];
 
     let map = null;
@@ -1619,16 +1743,23 @@
 
     function filterVenues() {
       const cards = document.querySelectorAll('.venue-card');
+      const requestedPeople = parseInt(localStorage.getItem('bookingPeople')) || 1;
       let visibleCount = 0;
 
       cards.forEach(card => {
         const walkTime = parseInt(card.dataset.walk);
         const wifi = card.dataset.wifi;
         const price = parseInt(card.dataset.price);
+        const seats = parseInt(card.dataset.seats) || 10;
         const hasPower = card.dataset.power !== 'false'; // All venues have power in this demo
         const isQuiet = card.dataset.quiet === 'true';
 
         let shouldShow = true;
+
+        // Capacity filter - hide venues that can't fit the party
+        if (seats < requestedPeople) {
+          shouldShow = false;
+        }
 
         // Walk time filter
         if (walkFilterActive && walkTime > 10) {
@@ -1674,8 +1805,108 @@
       filterVenues();
     }
 
+    // Update search meta display
+    // Meta selectors (date, time, people)
+    function initMetaSelectors() {
+      const selectors = document.querySelectorAll('.meta-selector');
+
+      // Initialize people value from localStorage
+      const savedPeople = parseInt(localStorage.getItem('bookingPeople')) || 1;
+      const peopleValue = document.getElementById('people-value');
+      if (peopleValue) {
+        peopleValue.textContent = savedPeople === 1 ? '1 person' : `${savedPeople} people`;
+      }
+
+      // Mark selected option in people dropdown
+      const peopleOptions = document.querySelectorAll('#people-dropdown .meta-option');
+      peopleOptions.forEach(opt => {
+        if (parseInt(opt.dataset.value) === savedPeople) {
+          opt.classList.add('selected');
+        }
+      });
+
+      // Initialize time from localStorage
+      const savedTime = localStorage.getItem('bookingTime') || '2:00 PM';
+      const timeValue = document.getElementById('time-value');
+      if (timeValue) {
+        timeValue.textContent = savedTime;
+      }
+      const timeOptions = document.querySelectorAll('#time-dropdown .meta-option');
+      timeOptions.forEach(opt => {
+        if (opt.dataset.value === savedTime) {
+          opt.classList.add('selected');
+        }
+      });
+
+      // Initialize date from localStorage
+      const savedDate = localStorage.getItem('bookingDate') || 'today';
+      const dateValue = document.getElementById('date-value');
+      const dateLabels = { 'today': 'Today', 'tomorrow': 'Tomorrow', 'day-after': 'Day After' };
+      if (dateValue) {
+        dateValue.textContent = dateLabels[savedDate] || 'Today';
+      }
+      const dateOptions = document.querySelectorAll('#date-dropdown .meta-option');
+      dateOptions.forEach(opt => {
+        if (opt.dataset.value === savedDate) {
+          opt.classList.add('selected');
+        }
+      });
+
+      // Toggle dropdown on click
+      selectors.forEach(selector => {
+        selector.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const wasOpen = selector.classList.contains('open');
+          // Close all dropdowns
+          selectors.forEach(s => s.classList.remove('open'));
+          // Toggle this one
+          if (!wasOpen) {
+            selector.classList.add('open');
+          }
+        });
+      });
+
+      // Handle option selection
+      document.querySelectorAll('.meta-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dropdown = option.closest('.meta-dropdown');
+          const selector = option.closest('.meta-selector');
+          const selectorId = selector.id;
+
+          // Remove selected from siblings
+          dropdown.querySelectorAll('.meta-option').forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+
+          // Update the value display and localStorage
+          if (selectorId === 'people-selector') {
+            const count = parseInt(option.dataset.value);
+            localStorage.setItem('bookingPeople', count);
+            document.getElementById('people-value').textContent = option.textContent;
+            filterVenues();
+            updateMapMarkers();
+          } else if (selectorId === 'time-selector') {
+            localStorage.setItem('bookingTime', option.dataset.value);
+            document.getElementById('time-value').textContent = option.dataset.value;
+          } else if (selectorId === 'date-selector') {
+            localStorage.setItem('bookingDate', option.dataset.value);
+            document.getElementById('date-value').textContent = option.textContent;
+          }
+
+          // Close dropdown
+          selector.classList.remove('open');
+        });
+      });
+
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', () => {
+        selectors.forEach(s => s.classList.remove('open'));
+      });
+    }
+
     // Restore filter state and apply initial filter
     restoreFilterState();
+    initMetaSelectors();
     filterVenues();
 
     // Venue gradients for favourites
@@ -1901,7 +2132,11 @@
       markers = [];
 
       // Filter venues based on all active filters (same logic as filterVenues)
+      const requestedPeople = parseInt(localStorage.getItem('bookingPeople')) || 1;
       const filteredVenues = venues.filter(venue => {
+        // Capacity filter
+        if ((venue.seats || 10) < requestedPeople) return false;
+
         // Walk time filter
         if (walkFilterActive && venue.walk > 10) return false;
 
