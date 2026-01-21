@@ -435,6 +435,15 @@
             <option value="16:00">4:00 PM</option>
           </select>
         </div>
+        <div class="input-group">
+          <label>People</label>
+          <select class="input" id="people-input">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
       </div>
 
       <div class="input-group" style="margin-bottom: 0;">
@@ -506,6 +515,16 @@
     // Set default date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date-input').value = today;
+
+    // Load and save people selection
+    const peopleInput = document.getElementById('people-input');
+    const savedPeople = localStorage.getItem('bookingPeople');
+    if (savedPeople) {
+      peopleInput.value = savedPeople;
+    }
+    peopleInput.addEventListener('change', () => {
+      localStorage.setItem('bookingPeople', peopleInput.value);
+    });
 
     // Geolocation functionality
     function getLocation() {
