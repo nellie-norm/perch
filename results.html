@@ -586,27 +586,28 @@
 
     /* Map Popup Styles */
     .map-popup {
-      min-width: 240px;
+      min-width: 280px;
+      padding: 8px 0;
     }
 
     .map-popup-image {
       width: 100%;
-      height: 100px;
+      height: 120px;
       border-radius: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .map-popup-name {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       margin-bottom: 4px;
       color: var(--text);
     }
 
     .map-popup-type {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-light);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .map-popup-meta {
@@ -681,10 +682,21 @@
     .leaflet-popup-content-wrapper {
       border-radius: 12px;
       padding: 0;
+      min-width: 304px;
+      cursor: pointer;
     }
 
     .leaflet-popup-content {
       margin: 12px;
+      width: 280px !important;
+    }
+
+    .leaflet-popup-tip {
+      display: none;
+    }
+
+    .leaflet-popup-close-button {
+      display: none;
     }
 
     @media (min-width: 768px) {
@@ -1910,8 +1922,22 @@
         `;
 
         marker.bindPopup(popupContent, {
-          maxWidth: 250,
-          minWidth: 200
+          maxWidth: 300,
+          minWidth: 280,
+          closeButton: false
+        });
+
+        // Close popup when clicking on it (but not on View Details link)
+        marker.on('popupopen', function() {
+          const popup = this.getPopup();
+          const popupEl = popup.getElement();
+          if (popupEl) {
+            popupEl.addEventListener('click', function(e) {
+              if (!e.target.closest('.map-popup-btn')) {
+                map.closePopup();
+              }
+            });
+          }
         });
 
         markers.push(marker);
