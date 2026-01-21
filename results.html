@@ -215,6 +215,12 @@
       color: var(--text-light);
     }
 
+    .venue-hours {
+      font-size: 12px;
+      color: var(--success);
+      margin-top: 2px;
+    }
+
     .venue-rating {
       display: flex;
       align-items: center;
@@ -434,6 +440,36 @@
     .venue-price-unit {
       font-size: 12px;
       color: var(--text-light);
+    }
+
+    /* No Results Empty State */
+    .no-results {
+      text-align: center;
+      padding: 48px 24px;
+      margin-top: 24px;
+    }
+
+    .no-results-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .no-results-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .no-results-text {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .no-results-btn {
+      max-width: 200px;
+      margin: 0 auto;
     }
 
     /* Placeholder images with gradients */
@@ -712,7 +748,22 @@
     .map-popup-type {
       font-size: 13px;
       color: var(--text-light);
+      margin-bottom: 6px;
+    }
+
+    .map-popup-info {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
       margin-bottom: 10px;
+    }
+
+    .map-popup-hours {
+      color: var(--success);
+    }
+
+    .map-popup-seats {
+      color: var(--text-secondary);
     }
 
     .map-popup-meta {
@@ -1379,6 +1430,7 @@
               <div>
                 <h3 class="venue-name">Allpress Espresso</h3>
                 <p class="venue-type">Coffee Roasters · Shoreditch</p>
+                <p class="venue-hours">Open · Closes 6pm</p>
               </div>
               <div class="venue-rating">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
@@ -1432,6 +1484,7 @@
               <div>
                 <h3 class="venue-name">Ozone Coffee Roasters</h3>
                 <p class="venue-type">Café · Old Street</p>
+                <p class="venue-hours">Open · Closes 5pm</p>
               </div>
               <div class="venue-rating">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
@@ -1485,6 +1538,7 @@
               <div>
                 <h3 class="venue-name">The Hoxton Lobby</h3>
                 <p class="venue-type">Hotel Café · Shoreditch</p>
+                <p class="venue-hours">Open · Closes 10pm</p>
               </div>
               <div class="venue-rating">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
@@ -1537,6 +1591,7 @@
               <div>
                 <h3 class="venue-name">Look Mum No Hands!</h3>
                 <p class="venue-type">Bike Café · Clerkenwell</p>
+                <p class="venue-hours">Open · Closes 9pm</p>
               </div>
               <div class="venue-rating">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
@@ -1590,6 +1645,7 @@
               <div>
                 <h3 class="venue-name">Caravan King's Cross</h3>
                 <p class="venue-type">Restaurant · King's Cross</p>
+                <p class="venue-hours">Open · Closes 10:30pm</p>
               </div>
               <div class="venue-rating">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
@@ -1643,6 +1699,7 @@
               <div>
                 <h3 class="venue-name">Attendant Fitzrovia</h3>
                 <p class="venue-type">Café · Fitzrovia</p>
+                <p class="venue-hours">Open · Closes 5:30pm</p>
               </div>
               <div class="venue-rating">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
@@ -1680,6 +1737,14 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- No Results Empty State -->
+      <div class="no-results" id="no-results" style="display: none;">
+        <div class="no-results-icon">🦉</div>
+        <h3 class="no-results-title">Oopsie daisy!</h3>
+        <p class="no-results-text">No spots match your filters. Try loosening up a bit?</p>
+        <button class="btn btn-secondary no-results-btn" onclick="clearAllFilters()">Clear all filters</button>
       </div>
       </div> <!-- End list-container -->
     </div>
@@ -1732,12 +1797,12 @@
 
     // Venue data with coordinates (Shoreditch/East London area)
     const venues = [
-      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast', power: true, quiet: false, seats: 14 },
-      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast', power: true, quiet: false, seats: 22 },
-      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine', power: true, quiet: true, seats: 35 },
-      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast', power: true, quiet: false, seats: 18 },
-      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast', power: true, quiet: false, seats: 40 },
-      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine', power: true, quiet: true, seats: 1 }
+      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast', power: true, quiet: false, seats: 14, closes: '6pm' },
+      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast', power: true, quiet: false, seats: 22, closes: '5pm' },
+      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine', power: true, quiet: true, seats: 35, closes: '10pm' },
+      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast', power: true, quiet: false, seats: 18, closes: '9pm' },
+      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast', power: true, quiet: false, seats: 40, closes: '10:30pm' },
+      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine', power: true, quiet: true, seats: 1, closes: '5:30pm' }
     ];
 
     let map = null;
@@ -1934,9 +1999,44 @@
         }
       });
 
-      // Update count
+      // Update count and show/hide empty state
       document.querySelector('.results-count').textContent = `${visibleCount} spots available`;
+
+      const noResults = document.getElementById('no-results');
+      const venuesGrid = document.getElementById('venues-grid');
+      if (visibleCount === 0) {
+        noResults.style.display = 'block';
+        venuesGrid.style.display = 'none';
+      } else {
+        noResults.style.display = 'none';
+        venuesGrid.style.display = '';
+      }
     }
+
+    function clearAllFilters() {
+      // Reset walk filter
+      walkFilterActive = false;
+      localStorage.setItem('walkFilterActive', 'false');
+      const walkChip = document.querySelector('.filter-chip[onclick*="walk"]');
+      if (walkChip) walkChip.classList.remove('active');
+
+      // Reset all other filters
+      Object.keys(activeFilters).forEach(key => {
+        activeFilters[key] = false;
+      });
+      localStorage.setItem('activeFilters', JSON.stringify(activeFilters));
+
+      // Reset UI chips
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        if (!chip.classList.contains('sort-chip')) {
+          chip.classList.remove('active');
+        }
+      });
+
+      // Re-filter venues
+      filterVenues();
+    }
+    window.clearAllFilters = clearAllFilters;
 
     function toggleFilter(el, filterType) {
       el.classList.toggle('active');
@@ -2442,6 +2542,10 @@
             <div class="map-popup-image" style="background: ${gradients[venue.id] || gradients.allpress};"></div>
             <div class="map-popup-name">${venue.name}</div>
             <div class="map-popup-type">${venue.type}</div>
+            <div class="map-popup-info">
+              <span class="map-popup-hours">Open · Closes ${venue.closes}</span>
+              <span class="map-popup-seats">${venue.seats} seats</span>
+            </div>
             <div class="map-popup-meta">
               <div class="map-popup-rating">
                 <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>

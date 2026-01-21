@@ -131,6 +131,12 @@
     .venue-subtitle {
       color: var(--text-secondary);
       font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .venue-hours {
+      font-size: 14px;
+      color: var(--success);
       margin-bottom: 16px;
     }
 
@@ -512,6 +518,7 @@
         </div>
       </div>
       <p class="venue-subtitle" id="venue-subtitle">Coffee Roasters · Shoreditch · 4 min walk</p>
+      <p class="venue-hours" id="venue-hours">Open · Closes 6pm</p>
 
       <div class="venue-tags" id="venue-tags">
         <span class="venue-tag" id="wifi-tag" style="background: #E3F2E8; color: #1B7340;">
@@ -738,6 +745,7 @@
         wifi: 'fast',
         wifiSpeed: '120 Mbps',
         seats: 14,
+        closes: '6pm',
         phone: '020 7749 1780',
         gradient: 'linear-gradient(135deg, #8B7355 0%, #D4A574 100%)'
       },
@@ -755,6 +763,7 @@
         wifi: 'fast',
         wifiSpeed: '150 Mbps',
         seats: 22,
+        closes: '5pm',
         phone: '020 7490 1039',
         gradient: 'linear-gradient(135deg, #5D6D7E 0%, #85929E 100%)'
       },
@@ -772,6 +781,7 @@
         wifi: 'fine',
         wifiSpeed: '50 Mbps',
         seats: 35,
+        closes: '10pm',
         phone: '020 7550 1000',
         gradient: 'linear-gradient(135deg, #7D6B5D 0%, #A89080 100%)'
       },
@@ -789,6 +799,7 @@
         wifi: 'fast',
         wifiSpeed: '100 Mbps',
         seats: 18,
+        closes: '9pm',
         phone: '020 7253 1025',
         gradient: 'linear-gradient(135deg, #6B7D5D 0%, #90A880 100%)'
       },
@@ -806,6 +817,7 @@
         wifi: 'fast',
         wifiSpeed: '200 Mbps',
         seats: 40,
+        closes: '10:30pm',
         phone: '020 7101 7661',
         gradient: 'linear-gradient(135deg, #5D7D8E 0%, #7DA0B0 100%)'
       },
@@ -823,6 +835,7 @@
         wifi: 'fine',
         wifiSpeed: '45 Mbps',
         seats: 12,
+        closes: '5:30pm',
         phone: '020 7637 3794',
         gradient: 'linear-gradient(135deg, #8D6D7E 0%, #A08090 100%)'
       }
@@ -842,6 +855,7 @@
       const walkTime = getWalkTime(venue.lat, venue.lng);
       const walkText = walkTime ? `${walkTime} min walk` : venue.area;
       document.getElementById('venue-subtitle').textContent = `${venue.type} · ${walkText}`;
+      document.getElementById('venue-hours').textContent = `Open · Closes ${venue.closes}`;
       document.getElementById('venue-price').textContent = `£${venue.price}`;
       document.getElementById('seats-text').textContent = `${venue.seats} seats`;
 
