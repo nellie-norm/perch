@@ -12,6 +12,36 @@
       margin-bottom: 16px;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .header-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .header-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
     .profile-btn {
       width: 40px;
       height: 40px;
@@ -23,7 +53,6 @@
       justify-content: center;
       cursor: pointer;
       transition: transform 0.2s;
-      margin-left: auto;
     }
 
     .profile-btn:hover {
@@ -994,12 +1023,20 @@
         <div>
           <h2>Workspaces</h2>
         </div>
-        <div class="profile-btn" onclick="handleProfileClick()">
-          <svg class="profile-icon" id="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          <span class="profile-avatar" id="profile-avatar" style="display:none;">JD</span>
+        <div class="header-actions">
+          <div class="header-btn" onclick="window.location.href='index.html'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+          <div class="profile-btn" onclick="handleProfileClick()">
+            <svg class="profile-icon" id="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span class="profile-avatar" id="profile-avatar" style="display:none;">JD</span>
+          </div>
         </div>
       </div>
 

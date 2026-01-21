@@ -69,6 +69,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
     }
 
     .summary-label {
@@ -110,20 +111,34 @@
       margin-bottom: 8px;
     }
 
+    .people-section {
+      padding: 14px 16px;
+    }
+
+    .people-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .people-label {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
     .people-stepper {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .stepper-btn {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 1px solid var(--border);
       background: var(--bg);
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400;
       color: var(--text-light);
       cursor: pointer;
@@ -139,9 +154,9 @@
     }
 
     .stepper-value {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
-      min-width: 24px;
+      min-width: 20px;
       text-align: center;
     }
 
@@ -717,14 +732,16 @@
       </div>
     </div>
 
-    <div class="section-card animate-in">
-      <h2>Number of People</h2>
-      <div class="people-stepper">
-        <button class="stepper-btn" onclick="adjustPeople(-1)">−</button>
-        <span class="stepper-value" id="people-value">1</span>
-        <button class="stepper-btn" onclick="adjustPeople(1)">+</button>
+    <div class="section-card animate-in people-section">
+      <div class="people-row">
+        <span class="people-label">People</span>
+        <div class="people-stepper">
+          <button class="stepper-btn" onclick="adjustPeople(-1)">−</button>
+          <span class="stepper-value" id="people-value">1</span>
+          <button class="stepper-btn" onclick="adjustPeople(1)">+</button>
+        </div>
       </div>
-      <p class="seats-warning" id="seats-warning" style="display: none; color: var(--error); font-size: 13px; margin-top: 8px;"></p>
+      <p class="seats-warning" id="seats-warning" style="display: none; color: var(--error); font-size: 13px; margin-top: 4px;"></p>
     </div>
 
     <div class="section-card animate-in">
