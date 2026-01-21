@@ -783,6 +783,16 @@
       border-top: 6px solid var(--primary);
     }
 
+    .custom-marker.pulse {
+      animation: markerPulse 0.6s ease-out 2;
+    }
+
+    @keyframes markerPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
     /* Leaflet overrides */
     .leaflet-popup-content-wrapper {
       border-radius: 12px;
@@ -1967,6 +1977,18 @@
 
       // Re-append in new order
       cards.forEach(card => grid.appendChild(card));
+
+      // Pulse the #1 marker on map (if not default sort)
+      if (sortType !== 'default' && cards.length > 0) {
+        const topVenueId = cards[0].dataset.id;
+        const topMarker = document.querySelector(`.custom-marker[data-venue-id="${topVenueId}"]`);
+        if (topMarker) {
+          topMarker.classList.remove('pulse');
+          // Trigger reflow to restart animation
+          void topMarker.offsetWidth;
+          topMarker.classList.add('pulse');
+        }
+      }
     }
 
     // Close sort dropdown when clicking outside
@@ -2390,7 +2412,7 @@
         // Create custom price marker
         const priceIcon = L.divIcon({
           className: 'custom-marker-wrapper',
-          html: `<div class="custom-marker">£${venue.price}</div>`,
+          html: `<div class="custom-marker" data-venue-id="${venue.id}">£${venue.price}</div>`,
           iconSize: [60, 30],
           iconAnchor: [30, 30]
         });
