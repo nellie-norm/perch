@@ -257,29 +257,6 @@
       border-color: var(--primary);
     }
 
-    .promo-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    .promo-row input {
-      flex: 1;
-    }
-
-    .promo-btn {
-      padding: 14px 20px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .promo-btn:hover {
-      background: var(--border);
-    }
-
     .price-breakdown {
       background: var(--bg);
       border-radius: 10px;
@@ -754,14 +731,6 @@
     </div>
 
     <div class="section-card animate-in">
-      <h2>Promo Code</h2>
-      <div class="promo-row">
-        <input type="text" class="input" placeholder="Enter code">
-        <button class="promo-btn">Apply</button>
-      </div>
-    </div>
-
-    <div class="section-card animate-in">
       <h2>Price Summary</h2>
       <div class="price-breakdown">
         <div class="price-row">
@@ -831,7 +800,7 @@
     const auth = getAuth(app);
 
     let currentUser = null;
-    let selectedDuration = 2;
+    let selectedDuration = parseInt(localStorage.getItem('bookingDuration')) || 2;
     let totalPrice = 16.79;
 
     onAuthStateChanged(auth, (user) => {
@@ -878,6 +847,32 @@
       if (!venueData.id) {
         showToast('Missing venue information. Please go back and try again.', 'error');
         return;
+      }
+
+      // Guest validation (if not logged in)
+      if (!currentUser) {
+        const guestName = document.getElementById('guest-name')?.value?.trim();
+        const guestEmail = document.getElementById('guest-email')?.value?.trim();
+
+        if (!guestName) {
+          showToast('Please enter your name', 'error');
+          document.getElementById('guest-name')?.focus();
+          return;
+        }
+
+        if (!guestEmail) {
+          showToast('Please enter your email', 'error');
+          document.getElementById('guest-email')?.focus();
+          return;
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(guestEmail)) {
+          showToast('Please enter a valid email address', 'error');
+          document.getElementById('guest-email')?.focus();
+          return;
+        }
       }
 
       // Show loading state
@@ -975,6 +970,7 @@
       document.querySelectorAll('.duration-option').forEach(d => d.classList.remove('selected'));
       el.classList.add('selected');
       selectedDuration = hours;
+      localStorage.setItem('bookingDuration', hours);
 
       // Update price display using venue price
       const pricePerHour = window.venuePrice || 7;
@@ -1038,8 +1034,15 @@
         // Store price for calculations
         window.venuePrice = venue.price;
 
-        // Update prices
-        selectDuration(document.querySelector('.duration-option.selected'), 2);
+        // Restore saved duration selection
+        const savedDuration = parseInt(localStorage.getItem('bookingDuration')) || 2;
+        const durationOptions = document.querySelectorAll('.duration-option');
+        durationOptions.forEach(opt => opt.classList.remove('selected'));
+        const durationIndex = savedDuration - 1; // 1hr = index 0, 2hr = index 1, etc.
+        if (durationOptions[durationIndex]) {
+          durationOptions[durationIndex].classList.add('selected');
+        }
+        selectDuration(durationOptions[durationIndex] || durationOptions[1], savedDuration);
       }
 
       // Update time display
