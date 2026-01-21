@@ -521,6 +521,72 @@
         padding: 24px 48px;
       }
     }
+
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 20px;
+      background: #1a1a1a;
+      color: white;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 90%;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: #C62828;
+    }
+
+    .toast.success {
+      background: #2E7D32;
+    }
+
+    .toast svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* Loading state for button */
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
+    }
+
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -735,6 +801,16 @@
     </div>
   </div>
 
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="toast-icon">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span id="toast-message">Message</span>
+  </div>
+
   <script type="module">
     // Firebase Firestore for bookings
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -772,9 +848,42 @@
       return ref;
     }
 
+    // Toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastMessage.textContent = message;
+      toast.classList.remove('error', 'success');
+
+      if (type === 'error') {
+        toast.classList.add('error');
+        toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+      } else if (type === 'success') {
+        toast.classList.add('success');
+        toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><polyline points="9 12 12 15 16 10"/>';
+      }
+
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
     // Save booking to Firestore
     async function saveBooking() {
+      const confirmBtn = document.querySelector('.confirm-btn');
       const venueData = JSON.parse(localStorage.getItem('currentVenue') || '{}');
+
+      // Validation
+      if (!venueData.id) {
+        showToast('Missing venue information. Please go back and try again.', 'error');
+        return;
+      }
+
+      // Show loading state
+      confirmBtn.classList.add('btn-loading');
+      confirmBtn.disabled = true;
+
       const bookingTime = localStorage.getItem('bookingTime') || '2:30 PM';
       const bookingRef = generateBookingRef();
       const today = new Date();
@@ -848,7 +957,17 @@
         window.location.href = 'confirmation.html';
       } catch (error) {
         console.error('Error saving booking:', error);
-        alert('There was an error processing your booking. Please try again.');
+        confirmBtn.classList.remove('btn-loading');
+        confirmBtn.disabled = false;
+
+        // More specific error messages
+        if (error.code === 'permission-denied') {
+          showToast('Permission denied. Please sign in to book.', 'error');
+        } else if (error.code === 'unavailable') {
+          showToast('Service unavailable. Please check your connection.', 'error');
+        } else {
+          showToast('Booking failed. Please try again.', 'error');
+        }
       }
     }
 
