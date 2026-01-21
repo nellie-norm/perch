@@ -103,7 +103,8 @@
       margin-bottom: 16px;
     }
 
-    .duration-selector {
+    .duration-selector,
+    .people-selector {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
@@ -683,6 +684,29 @@
     </div>
 
     <div class="section-card animate-in">
+      <h2>Number of People</h2>
+      <div class="people-selector">
+        <div class="duration-option selected" onclick="selectPeople(this, 1)">
+          <div class="duration-hours">1</div>
+          <div class="duration-label">person</div>
+        </div>
+        <div class="duration-option" onclick="selectPeople(this, 2)">
+          <div class="duration-hours">2</div>
+          <div class="duration-label">people</div>
+        </div>
+        <div class="duration-option" onclick="selectPeople(this, 3)">
+          <div class="duration-hours">3</div>
+          <div class="duration-label">people</div>
+        </div>
+        <div class="duration-option" onclick="selectPeople(this, 4)">
+          <div class="duration-hours">4</div>
+          <div class="duration-label">people</div>
+        </div>
+      </div>
+      <p class="seats-warning" id="seats-warning" style="display: none; color: var(--error); font-size: 13px; margin-top: 8px;"></p>
+    </div>
+
+    <div class="section-card animate-in">
       <h2>Payment Method</h2>
       <div class="payment-methods">
         <div class="payment-method selected" onclick="selectPayment(this)">
@@ -804,7 +828,9 @@
 
     let currentUser = null;
     let selectedDuration = parseInt(localStorage.getItem('bookingDuration')) || 2;
+    let selectedPeople = parseInt(localStorage.getItem('bookingPeople')) || 1;
     let totalPrice = 16.79;
+    let venueSeats = 14; // Default, updated from venue data
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
@@ -824,6 +850,7 @@
           booking_date: new Date(booking.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
           booking_time: booking.time,
           duration: booking.duration,
+          people: booking.people,
           total_price: booking.totalPrice.toFixed(2)
         });
         console.log('Confirmation email sent');
@@ -932,6 +959,7 @@
         date: dateStr,
         time: bookingTime,
         duration: selectedDuration,
+        people: selectedPeople,
         totalPrice: totalPrice,
         user: {
           name: userName,
@@ -958,7 +986,7 @@
 
         if (slotDoc.exists()) {
           await updateDoc(slotRef, {
-            bookedSeats: increment(1)
+            bookedSeats: increment(selectedPeople)
           });
         } else {
           // Initialize slot with first booking
@@ -967,7 +995,7 @@
             date: dateStr,
             time: bookingTime,
             totalSeats: venueData.seats || 14,
-            bookedSeats: 1
+            bookedSeats: selectedPeople
           });
         }
 
@@ -995,22 +1023,20 @@
       }
     }
 
-    function selectDuration(el, hours) {
-      document.querySelectorAll('.duration-option').forEach(d => d.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedDuration = hours;
-      localStorage.setItem('bookingDuration', hours);
-
-      // Update price display using venue price
+    function updatePrice() {
       const pricePerHour = window.venuePrice || 7;
-      const basePrice = pricePerHour * hours;
-      const serviceFee = 1.50;
+      const basePrice = pricePerHour * selectedDuration * selectedPeople;
+      const serviceFee = 1.50 * selectedPeople;
       const tax = (basePrice + serviceFee) * 0.077; // UK VAT simplified
       const total = basePrice + serviceFee + tax;
       totalPrice = total;
 
-      document.querySelector('.price-row:nth-child(1) .label').textContent = `Workspace (${hours} hour${hours > 1 ? 's' : ''})`;
+      const durationLabel = `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''}`;
+      const peopleLabel = selectedPeople > 1 ? ` × ${selectedPeople} people` : '';
+
+      document.querySelector('.price-row:nth-child(1) .label').textContent = `Workspace (${durationLabel}${peopleLabel})`;
       document.querySelector('.price-row:nth-child(1) span:last-child').textContent = `£${basePrice.toFixed(2)}`;
+      document.querySelector('.price-row:nth-child(2) span:last-child').textContent = `£${serviceFee.toFixed(2)}`;
       document.querySelector('.price-row:nth-child(3) span:last-child').textContent = `£${tax.toFixed(2)}`;
       document.querySelector('.total-row span:last-child').textContent = `£${total.toFixed(2)}`;
       document.querySelector('.confirm-btn').innerHTML = `
@@ -1020,6 +1046,30 @@
         </svg>
         Pay £${total.toFixed(2)}
       `;
+    }
+
+    function selectDuration(el, hours) {
+      document.querySelectorAll('.duration-selector .duration-option').forEach(d => d.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedDuration = hours;
+      localStorage.setItem('bookingDuration', hours);
+      updatePrice();
+    }
+
+    function selectPeople(el, count) {
+      // Check capacity
+      if (count > venueSeats) {
+        document.getElementById('seats-warning').textContent = `Only ${venueSeats} seats available at this venue`;
+        document.getElementById('seats-warning').style.display = 'block';
+        return;
+      }
+      document.getElementById('seats-warning').style.display = 'none';
+
+      document.querySelectorAll('.people-selector .duration-option').forEach(d => d.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedPeople = count;
+      localStorage.setItem('bookingPeople', count);
+      updatePrice();
     }
 
     function selectPayment(el) {
@@ -1060,18 +1110,32 @@
         document.getElementById('venue-rating').textContent = `${venue.rating} (${venue.reviews} reviews)`;
         document.getElementById('summary-image').style.background = venue.gradient;
 
-        // Store price for calculations
+        // Store price and seats for calculations
         window.venuePrice = venue.price;
+        venueSeats = venue.seats || 14;
 
         // Restore saved duration selection
         const savedDuration = parseInt(localStorage.getItem('bookingDuration')) || 2;
-        const durationOptions = document.querySelectorAll('.duration-option');
+        const durationOptions = document.querySelectorAll('.duration-selector .duration-option');
         durationOptions.forEach(opt => opt.classList.remove('selected'));
         const durationIndex = savedDuration - 1; // 1hr = index 0, 2hr = index 1, etc.
         if (durationOptions[durationIndex]) {
           durationOptions[durationIndex].classList.add('selected');
         }
-        selectDuration(durationOptions[durationIndex] || durationOptions[1], savedDuration);
+
+        // Restore saved people selection
+        const savedPeople = parseInt(localStorage.getItem('bookingPeople')) || 1;
+        const peopleOptions = document.querySelectorAll('.people-selector .duration-option');
+        peopleOptions.forEach(opt => opt.classList.remove('selected'));
+        const peopleIndex = savedPeople - 1;
+        if (peopleOptions[peopleIndex]) {
+          peopleOptions[peopleIndex].classList.add('selected');
+        }
+        selectedPeople = savedPeople;
+
+        // Update prices with restored values
+        selectedDuration = savedDuration;
+        updatePrice();
       }
 
       // Update time display
@@ -1082,6 +1146,7 @@
 
     // Expose functions to window for onclick handlers
     window.selectDuration = selectDuration;
+    window.selectPeople = selectPeople;
     window.selectPayment = selectPayment;
     window.saveBooking = saveBooking;
   </script>
