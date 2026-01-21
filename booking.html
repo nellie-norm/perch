@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     .booking-page {
-      padding-bottom: 120px;
+      padding-bottom: 150px;
     }
 
     .booking-summary {
@@ -298,6 +298,7 @@
       box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
     }
 
+
     .confirm-btn {
       width: 100%;
       padding: 18px;
@@ -423,7 +424,7 @@
     @media (min-width: 768px) {
       .booking-page {
         padding: 32px;
-        padding-bottom: 140px;
+        padding-bottom: 170px;
       }
 
       .page-header {
@@ -488,6 +489,7 @@
     @media (min-width: 1024px) {
       .booking-page {
         padding: 48px;
+        padding-bottom: 170px;
       }
 
       .booking-container {
@@ -746,7 +748,7 @@
           <span class="label">Tax</span>
           <span>£1.29</span>
         </div>
-        <div class="price-row">
+        <div class="price-row total-row">
           <span class="label">Total</span>
           <span>£16.79</span>
         </div>
@@ -1010,7 +1012,7 @@
       document.querySelector('.price-row:nth-child(1) .label').textContent = `Workspace (${hours} hour${hours > 1 ? 's' : ''})`;
       document.querySelector('.price-row:nth-child(1) span:last-child').textContent = `£${basePrice.toFixed(2)}`;
       document.querySelector('.price-row:nth-child(3) span:last-child').textContent = `£${tax.toFixed(2)}`;
-      document.querySelector('.price-row:last-child span:last-child').textContent = `£${total.toFixed(2)}`;
+      document.querySelector('.total-row span:last-child').textContent = `£${total.toFixed(2)}`;
       document.querySelector('.confirm-btn').innerHTML = `
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
