@@ -7,35 +7,15 @@
   <link rel="stylesheet" href="styles.css">
   <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
-      authDomain: "perch-96206.firebaseapp.com",
-      projectId: "perch-96206",
-      storageBucket: "perch-96206.firebasestorage.app",
-      messagingSenderId: "666435496292",
-      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    import { auth } from "./js/firebase-config.js";
+    import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     const googleProvider = new GoogleAuthProvider();
 
     // Make functions available globally
     window.firebaseGoogleLogin = async function() {
       try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userName', user.displayName || user.email.split('@')[0]);
-        localStorage.setItem('userEmail', user.email);
-        localStorage.setItem('userPhoto', user.photoURL || '');
-        localStorage.setItem('loginProvider', 'google');
-        localStorage.removeItem('isGuest');
-
+        await signInWithPopup(auth, googleProvider);
+        // Firebase Auth state is now the source of truth - no localStorage needed
         window.location.href = 'index.html';
       } catch (error) {
         console.error('Google login error:', error);
@@ -45,15 +25,8 @@
 
     window.firebaseEmailSignIn = async function(email, password) {
       try {
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        const user = result.user;
-
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userName', user.displayName || email.split('@')[0]);
-        localStorage.setItem('userEmail', user.email);
-        localStorage.setItem('loginProvider', 'email');
-        localStorage.removeItem('isGuest');
-
+        await signInWithEmailAndPassword(auth, email, password);
+        // Firebase Auth state is now the source of truth - no localStorage needed
         window.location.href = 'index.html';
       } catch (error) {
         console.error('Email login error:', error);
@@ -70,14 +43,9 @@
     window.firebaseEmailSignUp = async function(name, email, password) {
       try {
         const result = await createUserWithEmailAndPassword(auth, email, password);
-        const user = result.user;
-
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userEmail', user.email);
-        localStorage.setItem('loginProvider', 'email');
-        localStorage.removeItem('isGuest');
-
+        // Set the display name in Firebase Auth profile
+        await updateProfile(result.user, { displayName: name });
+        // Firebase Auth state is now the source of truth - no localStorage needed
         window.location.href = 'account.html';
       } catch (error) {
         console.error('Sign up error:', error);
@@ -584,10 +552,7 @@
     }
 
     function continueAsGuest() {
-      localStorage.setItem('isGuest', 'true');
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
+      // No auth state = guest. Just redirect.
       window.location.href = 'index.html';
     }
   </script>

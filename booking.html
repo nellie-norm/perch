@@ -800,19 +800,15 @@
       <div class="price-breakdown">
         <div class="price-row">
           <span class="label">Workspace (2 hours)</span>
-          <span>£14.00</span>
+          <span id="price-subtotal">£14.00</span>
         </div>
         <div class="price-row">
-          <span class="label">Service fee</span>
-          <span>£1.50</span>
-        </div>
-        <div class="price-row">
-          <span class="label">Tax</span>
-          <span>£1.29</span>
+          <span class="label">VAT (20%)</span>
+          <span id="price-vat">£2.80</span>
         </div>
         <div class="price-row total-row">
           <span class="label">Total</span>
-          <span>£16.79</span>
+          <span id="price-total">£16.80</span>
         </div>
       </div>
     </div>
@@ -847,22 +843,10 @@
 
   <script type="module">
     // Firebase Firestore for bookings
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
-      authDomain: "perch-96206.firebaseapp.com",
-      projectId: "perch-96206",
-      storageBucket: "perch-96206.firebasestorage.app",
-      messagingSenderId: "666435496292",
-      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    import { db, auth } from "./js/firebase-config.js";
+    import { getVenueByIdSync } from "./js/venues-data.js";
+    import { doc, setDoc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     let currentUser = null;
     let selectedDuration = parseInt(localStorage.getItem('bookingDuration')) || 2;
@@ -872,6 +856,10 @@
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
+      // Update guest checkout section visibility
+      if (typeof checkUserStatus === 'function') {
+        checkUserStatus();
+      }
     });
 
     // Initialize EmailJS
@@ -975,11 +963,11 @@
       const today = new Date();
       const dateStr = today.toISOString().split('T')[0];
 
-      // Get user info
+      // Get user info from Firebase Auth or guest form
       let userName, userEmail;
       if (currentUser) {
-        userName = currentUser.displayName || localStorage.getItem('userName') || 'Guest';
-        userEmail = currentUser.email || localStorage.getItem('userEmail');
+        userName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+        userEmail = currentUser.email || '';
       } else {
         userName = document.getElementById('guest-name')?.value || 'Guest';
         userEmail = document.getElementById('guest-email')?.value || '';
@@ -1062,21 +1050,30 @@
     }
 
     function updatePrice() {
-      const pricePerHour = window.venuePrice || 7;
-      const basePrice = pricePerHour * selectedDuration * selectedPeople;
-      const serviceFee = 1.50 * selectedPeople;
-      const tax = (basePrice + serviceFee) * 0.077; // UK VAT simplified
-      const total = basePrice + serviceFee + tax;
+      // Get price from venue data, fallback to venues-data.js, then default
+      const venueData = JSON.parse(localStorage.getItem('currentVenue') || '{}');
+      let pricePerHour = venueData.price || window.venuePrice;
+
+      // If still no price, try to get from venues-data.js
+      if (!pricePerHour && venueData.id) {
+        const venue = getVenueByIdSync(venueData.id);
+        pricePerHour = venue?.pricePerHour || 7;
+      }
+      pricePerHour = pricePerHour || 7;
+
+      // Calculate: (price × hours × people) + 20% VAT
+      const subtotal = pricePerHour * selectedDuration * selectedPeople;
+      const vat = subtotal * 0.20;
+      const total = subtotal + vat;
       totalPrice = total;
 
       const durationLabel = `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''}`;
       const peopleLabel = selectedPeople > 1 ? ` × ${selectedPeople} people` : '';
 
       document.querySelector('.price-row:nth-child(1) .label').textContent = `Workspace (${durationLabel}${peopleLabel})`;
-      document.querySelector('.price-row:nth-child(1) span:last-child').textContent = `£${basePrice.toFixed(2)}`;
-      document.querySelector('.price-row:nth-child(2) span:last-child').textContent = `£${serviceFee.toFixed(2)}`;
-      document.querySelector('.price-row:nth-child(3) span:last-child').textContent = `£${tax.toFixed(2)}`;
-      document.querySelector('.total-row span:last-child').textContent = `£${total.toFixed(2)}`;
+      document.getElementById('price-subtotal').textContent = `£${subtotal.toFixed(2)}`;
+      document.getElementById('price-vat').textContent = `£${vat.toFixed(2)}`;
+      document.getElementById('price-total').textContent = `£${total.toFixed(2)}`;
       document.querySelector('.confirm-btn').innerHTML = `
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -1123,22 +1120,17 @@
       document.getElementById('card-form').style.display = isNewCard ? 'flex' : 'none';
     }
 
-    // Check login/guest status
+    // Check login/guest status - uses currentUser from Firebase Auth
     function checkUserStatus() {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const isGuest = localStorage.getItem('isGuest') === 'true';
       const guestSection = document.getElementById('guest-details');
 
-      if (!isLoggedIn) {
+      if (!currentUser) {
         // Show guest checkout section
         guestSection.style.display = 'block';
       } else {
         guestSection.style.display = 'none';
       }
     }
-
-    // Initialize on page load
-    checkUserStatus();
 
     // Load venue data from localStorage
     function loadBookingData() {

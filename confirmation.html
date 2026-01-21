@@ -485,20 +485,8 @@
 
   <script type="module">
     // Firebase Firestore for bookings
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
-      authDomain: "perch-96206.firebaseapp.com",
-      projectId: "perch-96206",
-      storageBucket: "perch-96206.firebasestorage.app",
-      messagingSenderId: "666435496292",
-      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    import { db } from "./js/firebase-config.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // Format date nicely
     function formatDate(dateStr) {

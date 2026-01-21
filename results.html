@@ -1770,22 +1770,10 @@
 
   <script type="module">
     // Firebase Firestore for favourites
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
-      authDomain: "perch-96206.firebaseapp.com",
-      projectId: "perch-96206",
-      storageBucket: "perch-96206.firebasestorage.app",
-      messagingSenderId: "666435496292",
-      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    import { db, auth } from "./js/firebase-config.js";
+    import { getAllVenues } from "./js/venues-data.js";
+    import { doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     let currentUser = null;
 
@@ -1793,17 +1781,26 @@
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       loadFavouritesState();
+      // Update profile UI when auth state changes
+      if (typeof updateProfileButton === 'function') {
+        updateProfileButton();
+      }
     });
 
-    // Venue data with coordinates (Shoreditch/East London area)
-    const venues = [
-      { id: 'allpress', name: 'Allpress Espresso', type: 'Coffee Roasters · Shoreditch', lat: 51.5245, lng: -0.0760, price: 7, rating: 4.8, wifi: 'fast', power: true, quiet: false, seats: 14, closes: '6pm' },
-      { id: 'ozone', name: 'Ozone Coffee Roasters', type: 'Café · Old Street', lat: 51.5275, lng: -0.0840, price: 8, rating: 4.7, wifi: 'fast', power: true, quiet: false, seats: 22, closes: '5pm' },
-      { id: 'hoxton', name: 'The Hoxton Lobby', type: 'Hotel Café · Shoreditch', lat: 51.5265, lng: -0.0800, price: 6, rating: 4.5, wifi: 'fine', power: true, quiet: true, seats: 35, closes: '10pm' },
-      { id: 'lookmum', name: 'Look Mum No Hands!', type: 'Bike Café · Clerkenwell', lat: 51.5225, lng: -0.1020, price: 5, rating: 4.6, wifi: 'fast', power: true, quiet: false, seats: 18, closes: '9pm' },
-      { id: 'caravan', name: "Caravan King's Cross", type: 'Restaurant · King\'s Cross', lat: 51.5355, lng: -0.1245, price: 9, rating: 4.4, wifi: 'fast', power: true, quiet: false, seats: 40, closes: '10:30pm' },
-      { id: 'attendant', name: 'Attendant Fitzrovia', type: 'Café · Fitzrovia', lat: 51.5195, lng: -0.1385, price: 6, rating: 4.3, wifi: 'fine', power: true, quiet: true, seats: 1, closes: '5:30pm' }
-    ];
+    // Venue data from centralized data file (loaded async from Firestore)
+    let venues = [];
+
+    // Load venues and initialize page
+    async function initVenues() {
+      const allVenues = await getAllVenues();
+      venues = allVenues.map(v => ({ ...v, price: v.pricePerHour }));
+      console.log(`Loaded ${venues.length} venues from Firestore`);
+      // Venues are used for filtering, sorting, and map markers
+      // The venue cards are static HTML for now
+      filterVenues();
+      initMap();
+    }
+    initVenues();
 
     let map = null;
     let markers = [];
@@ -2369,14 +2366,13 @@
     // Initial load (will be called again when auth state changes)
     loadFavouritesState();
 
-    // Profile/Login state management
+    // Profile/Login state management - uses Firebase Auth (currentUser is set by onAuthStateChanged above)
     function updateProfileButton() {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const userName = localStorage.getItem('userName') || '';
       const profileIcon = document.getElementById('profile-icon');
       const profileAvatar = document.getElementById('profile-avatar');
 
-      if (isLoggedIn && userName) {
+      if (currentUser) {
+        const userName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
         const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         profileAvatar.textContent = initials;
         profileIcon.style.display = 'none';
@@ -2388,16 +2384,12 @@
     }
 
     function handleProfileClick() {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      if (isLoggedIn) {
+      if (currentUser) {
         window.location.href = 'account.html';
       } else {
         window.location.href = 'login.html';
       }
     }
-
-    // Initialize profile button on page load
-    updateProfileButton();
 
     // Map functions
     function initMap() {

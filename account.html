@@ -861,22 +861,9 @@
 
   <script type="module">
     // Firebase Firestore for favourites and bookings
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, deleteDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGKD7wM7O0vnwR_NXWQVhNYudLQHFqts8",
-      authDomain: "perch-96206.firebaseapp.com",
-      projectId: "perch-96206",
-      storageBucket: "perch-96206.firebasestorage.app",
-      messagingSenderId: "666435496292",
-      appId: "1:666435496292:web:df730cd0dfcb42ab277271"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    import { db, auth } from "./js/firebase-config.js";
+    import { doc, deleteDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     let currentUser = null;
 
@@ -1080,14 +1067,19 @@
     // Expose cancelBooking to window
     window.cancelBooking = cancelBooking;
 
-    // Load user data
-    document.addEventListener('DOMContentLoaded', () => {
-      const name = localStorage.getItem('userName') || 'John Doe';
-      const email = localStorage.getItem('userEmail') || 'john@example.com';
+    // Load user data from Firebase Auth state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const name = user.displayName || user.email?.split('@')[0] || 'User';
+        const email = user.email || '';
 
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-email').textContent = email;
-      document.getElementById('user-avatar').textContent = name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('user-name').textContent = name;
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('user-avatar').textContent = name.split(' ').map(n => n[0]).join('').toUpperCase();
+      } else {
+        // Not logged in, redirect to login
+        window.location.href = 'login.html';
+      }
     });
 
     async function getFavourites() {
@@ -1192,12 +1184,14 @@
       alert('Payment method added! (Demo)');
     }
 
-    function logout() {
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('loginProvider');
-      window.location.href = 'login.html';
+    async function logout() {
+      try {
+        await auth.signOut();
+        window.location.href = 'login.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Failed to log out. Please try again.');
+      }
     }
 
     // Close modal on backdrop click

@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// Firestore Security Rules for Perch
+// Deploy with: firebase deploy --only firestore:rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============ VENUES ============
+    // Anyone can read venues (public data)
+    // Only admins can write
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ============ BOOKINGS ============
+    // Global bookings collection - for venue operators to see all bookings
+    match /bookings/{bookingId} {
+      // Anyone can create a booking (guests included)
+      allow create: if true;
+
+      // Only the booking owner can read their booking
+      // Or if the user is authenticated and created the booking
+      allow read: if resource.data.user.uid == request.auth.uid
+                  || resource.data.user.email == request.auth.token.email;
+
+      // Only the booking owner can update/cancel
+      allow update: if resource.data.user.uid == request.auth.uid;
+
+      // No deletes - bookings should be cancelled, not deleted
+      allow delete: if false;
+    }
+
+    // ============ USER DATA ============
+    match /users/{userId} {
+      // Users can only access their own data
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // User's bookings subcollection
+      match /bookings/{bookingId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // User's favourites subcollection
+      match /favourites/{favouriteId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ============ AVAILABILITY ============
+    // Slot availability - anyone can read, authenticated users can update
+    match /availability/{slotId} {
+      allow read: if true;
+
+      // Allow creating new slots when booking
+      allow create: if true;
+
+      // Allow incrementing bookedSeats
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['bookedSeats']);
+    }
+
+    // ============ DEFAULT DENY ============
+    // Deny access to any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

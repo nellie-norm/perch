@@ -654,14 +654,13 @@
     `;
     document.head.appendChild(style);
 
-    // Profile/Login state management
-    function updateProfileButton() {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const userName = localStorage.getItem('userName') || '';
+    // Profile/Login state management - now handled by Firebase Auth module below
+    function updateProfileButton(user) {
       const profileIcon = document.getElementById('profile-icon');
       const profileAvatar = document.getElementById('profile-avatar');
 
-      if (isLoggedIn && userName) {
+      if (user) {
+        const userName = user.displayName || user.email?.split('@')[0] || 'User';
         const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         profileAvatar.textContent = initials;
         profileIcon.style.display = 'none';
@@ -672,17 +671,13 @@
       }
     }
 
-    function handleProfileClick() {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      if (isLoggedIn) {
-        window.location.href = 'account.html';
-      } else {
-        window.location.href = 'login.html';
-      }
-    }
+    // Make updateProfileButton available globally for the auth module
+    window.updateProfileButton = updateProfileButton;
 
-    // Initialize profile button on page load
-    updateProfileButton();
+    function handleProfileClick() {
+      // Auth state is checked by the module - this just navigates
+      window.location.href = window._isLoggedIn ? 'account.html' : 'login.html';
+    }
 
     // Location search using OpenStreetMap Nominatim API
     const locationInput = document.getElementById('location-input');
@@ -839,6 +834,19 @@
           tag.classList.add('selected');
         }
       });
+    });
+  </script>
+
+  <!-- Firebase Auth state management -->
+  <script type="module">
+    import { auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    onAuthStateChanged(auth, (user) => {
+      window._isLoggedIn = !!user;
+      if (window.updateProfileButton) {
+        window.updateProfileButton(user);
+      }
     });
   </script>
 </body>
