@@ -1372,6 +1372,12 @@
         <div class="filter-chip" onclick="toggleFilter(this, 'power')">Power</div>
         <div class="filter-chip" onclick="toggleFilter(this, 'quiet')">Quiet</div>
         <div class="filter-chip" onclick="toggleFilter(this, 'under10')">Under £10</div>
+        <div class="filter-chip" id="favourites-filter" onclick="toggleFilter(this, 'favourites')" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          Favourites
+        </div>
       </div>
 
       <div class="walk-filter animate-in">
@@ -1790,6 +1796,18 @@
       if (typeof updateProfileButton === 'function') {
         updateProfileButton();
       }
+      // Show/hide favourites filter based on auth state
+      const favFilter = document.getElementById('favourites-filter');
+      if (favFilter) {
+        favFilter.style.display = user ? '' : 'none';
+        // Clear favourites filter if user logs out while it's active
+        if (!user && activeFilters && activeFilters['favourites']) {
+          activeFilters['favourites'] = false;
+          favFilter.classList.remove('active');
+          localStorage.setItem('activeFilters', JSON.stringify(activeFilters));
+          filterVenues();
+        }
+      }
     });
 
     // Venue data from centralized data file (loaded async from Firestore)
@@ -1982,7 +2000,8 @@
         'fast-wifi': false,
         'power': false,
         'quiet': false,
-        'under10': false
+        'under10': false,
+        'favourites': false
       };
       localStorage.setItem('activeFilters', JSON.stringify(activeFilters));
     }
@@ -2068,6 +2087,14 @@
         // Under £10 filter
         if (activeFilters['under10'] && price >= 10) {
           shouldShow = false;
+        }
+
+        // Favourites filter
+        if (activeFilters['favourites']) {
+          const favBtn = card.querySelector('.favourite-btn');
+          if (!favBtn || !favBtn.classList.contains('active')) {
+            shouldShow = false;
+          }
         }
 
         if (shouldShow) {
@@ -2319,59 +2346,48 @@
       attendant: 'linear-gradient(135deg, #8D6D7E 0%, #A08090 100%)'
     };
 
-    // Favourites functionality with Firestore
+    // Favourites functionality with Firestore (requires account)
     async function getFavourites() {
-      if (currentUser) {
-        try {
-          const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'favourites'));
-          const favourites = [];
-          querySnapshot.forEach((doc) => {
-            favourites.push({ id: doc.id, ...doc.data() });
-          });
-          return favourites;
-        } catch (error) {
-          console.error('Error getting favourites:', error);
-          return [];
-        }
-      } else {
-        const favourites = localStorage.getItem('favourites');
-        return favourites ? JSON.parse(favourites) : [];
+      if (!currentUser) return [];
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'favourites'));
+        const favourites = [];
+        querySnapshot.forEach((doc) => {
+          favourites.push({ id: doc.id, ...doc.data() });
+        });
+        return favourites;
+      } catch (error) {
+        console.error('Error getting favourites:', error);
+        return [];
       }
     }
 
     async function addFavourite(favData) {
-      if (currentUser) {
-        try {
-          await setDoc(doc(db, 'users', currentUser.uid, 'favourites', favData.id), favData);
-        } catch (error) {
-          console.error('Error adding favourite:', error);
-        }
-      } else {
-        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
-        favourites.push(favData);
-        localStorage.setItem('favourites', JSON.stringify(favourites));
+      if (!currentUser) return;
+      try {
+        await setDoc(doc(db, 'users', currentUser.uid, 'favourites', favData.id), favData);
+      } catch (error) {
+        console.error('Error adding favourite:', error);
       }
     }
 
     async function removeFavouriteFromDB(venueId) {
-      if (currentUser) {
-        try {
-          await deleteDoc(doc(db, 'users', currentUser.uid, 'favourites', venueId));
-        } catch (error) {
-          console.error('Error removing favourite:', error);
-        }
-      } else {
-        const favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
-        const index = favourites.findIndex(f => f.id === venueId);
-        if (index > -1) {
-          favourites.splice(index, 1);
-          localStorage.setItem('favourites', JSON.stringify(favourites));
-        }
+      if (!currentUser) return;
+      try {
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'favourites', venueId));
+      } catch (error) {
+        console.error('Error removing favourite:', error);
       }
     }
 
     async function toggleFavourite(event, venueId, venueName) {
       event.stopPropagation(); // Prevent card click
+
+      // Require login to favourite
+      if (!currentUser) {
+        showLoginPrompt();
+        return;
+      }
 
       const btn = event.currentTarget;
       const favourites = await getFavourites();
@@ -2393,18 +2409,13 @@
         };
         await addFavourite(favData);
         btn.classList.add('active');
-
-        // Show notice for guests on first favourite
-        if (!currentUser && favourites.length === 0) {
-          showGuestFavouriteNotice();
-        }
       }
+
+      // Re-filter in case favourites filter is active
+      filterVenues();
     }
 
-    function showGuestFavouriteNotice() {
-      // Check if notice already shown
-      if (localStorage.getItem('guestFavNoticeShown')) return;
-
+    function showLoginPrompt() {
       const notice = document.createElement('div');
       notice.className = 'guest-fav-notice';
       notice.innerHTML = `
@@ -2413,14 +2424,18 @@
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
           <div>
-            <strong>Saved to this device</strong>
-            <p>Sign in to sync favourites across devices</p>
+            <strong>Sign in to save favourites</strong>
+            <p>Create a free account to save your favourite spots</p>
           </div>
-          <button onclick="this.parentElement.parentElement.remove()">Got it</button>
+          <button onclick="window.location.href='login.html'">Sign in</button>
         </div>
       `;
       document.body.appendChild(notice);
-      localStorage.setItem('guestFavNoticeShown', 'true');
+
+      // Click outside to dismiss
+      notice.addEventListener('click', (e) => {
+        if (e.target === notice) notice.remove();
+      });
 
       // Auto-dismiss after 5 seconds
       setTimeout(() => {
