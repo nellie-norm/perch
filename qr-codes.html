@@ -96,36 +96,52 @@
     </button>
   </div>
 
-  <script>
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
     const BASE_URL = 'https://perch.works/scan.html?venue=';
-
-    const venues = [
-      { id: 'allpress', name: 'Allpress Espresso', area: 'Shoreditch' },
-      { id: 'ozone', name: 'Ozone Coffee Roasters', area: 'Old Street' },
-      { id: 'hoxton', name: 'The Hoxton Lobby', area: 'Shoreditch' },
-      { id: 'lookmum', name: 'Look Mum No Hands!', area: 'Clerkenwell' },
-      { id: 'caravan', name: "Caravan King's Cross", area: "King's Cross" },
-      { id: 'attendant', name: 'Attendant Fitzrovia', area: 'Fitzrovia' },
-    ];
-
     const grid = document.getElementById('qr-grid');
 
-    venues.forEach(venue => {
-      const url = BASE_URL + venue.id;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    async function loadVenues() {
+      grid.innerHTML = '<p style="text-align: center; color: var(--text-light); grid-column: 1 / -1;">Loading venues...</p>';
 
-      const card = document.createElement('div');
-      card.className = 'qr-card';
-      card.innerHTML = `
-        <h3>${venue.name}</h3>
-        <p class="area">${venue.area}</p>
-        <img src="${qrUrl}" alt="QR Code for ${venue.name}">
-        <div class="url">${url}</div>
-        <a href="${qrUrl}" download="${venue.id}-qr.png" class="btn btn-secondary">Download PNG</a>
-      `;
+      try {
+        const venuesRef = collection(db, 'venues');
+        const q = query(venuesRef, where('active', '==', true), orderBy('name'));
+        const snapshot = await getDocs(q);
 
-      grid.appendChild(card);
-    });
+        if (snapshot.empty) {
+          grid.innerHTML = '<p style="text-align: center; color: var(--text-light); grid-column: 1 / -1;">No venues found</p>';
+          return;
+        }
+
+        grid.innerHTML = '';
+
+        snapshot.forEach(doc => {
+          const venue = { id: doc.id, ...doc.data() };
+          const url = BASE_URL + venue.id;
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+
+          const card = document.createElement('div');
+          card.className = 'qr-card';
+          card.innerHTML = `
+            <h3>${venue.name}</h3>
+            <p class="area">${venue.area}</p>
+            <img src="${qrUrl}" alt="QR Code for ${venue.name}">
+            <div class="url">${url}</div>
+            <a href="${qrUrl}" download="${venue.id}-qr.png" class="btn btn-secondary">Download PNG</a>
+          `;
+
+          grid.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading venues:', error);
+        grid.innerHTML = `<p style="text-align: center; color: var(--error); grid-column: 1 / -1;">Error loading venues: ${error.message}</p>`;
+      }
+    }
+
+    loadVenues();
   </script>
 </body>
 </html>

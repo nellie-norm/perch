@@ -913,11 +913,11 @@
       }
     }
 
-    // Generate unique booking reference
+    // Generate unique booking reference (3 characters for easy check-in)
     function generateBookingRef() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let ref = 'PRCH-';
-      for (let i = 0; i < 6; i++) {
+      let ref = '';
+      for (let i = 0; i < 3; i++) {
         ref += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       return ref;

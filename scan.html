@@ -387,38 +387,34 @@
         <button class="btn btn-primary" onclick="window.location.href='index.html'">Go to Perch</button>
       </div>
 
-      <!-- NEW USER SCREEN - not logged in -->
-      <div class="screen" id="screen-new-user">
-        <div class="venue-tag" id="new-user-venue"></div>
-        <h1 class="scan-title">Need a place to work?</h1>
-        <p class="scan-subtitle">Perch gets you guaranteed workspace in London's best cafes and restaurants. WiFi, power, and a welcome - all for a few quid.</p>
+      <!-- LANDING SCREEN - choose action -->
+      <div class="screen" id="screen-landing">
+        <div class="venue-tag" id="landing-venue"></div>
+        <h1 class="scan-title">Welcome to Perch</h1>
+        <p class="scan-subtitle">What would you like to do?</p>
+
+        <div class="option-card" id="option-checkin">
+          <h3>Check in</h3>
+          <p>I have a booking and I'm arriving now</p>
+        </div>
+
+        <div class="option-card" id="option-checkout">
+          <h3>Check out</h3>
+          <p>I'm leaving and want to log my session</p>
+        </div>
 
         <div class="spacer"></div>
 
-        <button class="btn btn-primary" onclick="window.location.href='login.html?redirect=scan&venue=' + venueId">Sign up free</button>
-        <button class="btn btn-secondary mt-16" onclick="window.location.href='index.html'">How it works</button>
+        <div class="divider-text">Not a member?</div>
 
-        <div class="divider-text">or</div>
-
-        <p class="small-text">Already have an account? <span class="link-text" onclick="window.location.href='login.html?redirect=scan&venue=' + venueId">Log in</span></p>
+        <button class="btn btn-secondary" onclick="window.location.href='login.html?redirect=scan&venue=' + venueId">Sign up free</button>
       </div>
 
-      <!-- CHECK-IN: Step 1 - Confirm start -->
-      <div class="screen" id="screen-checkin-start">
-        <div class="venue-tag" id="checkin-venue"></div>
-        <h1 class="scan-title">Starting a work session?</h1>
-        <p class="scan-subtitle">Check in to confirm your arrival. Scan again when you leave to earn credit.</p>
-
-        <div class="spacer"></div>
-
-        <button class="btn btn-primary" id="btn-yes-checkin">Yes, check me in</button>
-        <button class="btn btn-secondary mt-16" onclick="window.location.href='index.html'">No, just browsing</button>
-      </div>
-
-      <!-- CHECK-IN: Step 2 - Enter booking code -->
+      <!-- CHECK-IN: Enter booking code -->
       <div class="screen" id="screen-checkin-code">
         <div class="venue-tag" id="checkin-code-venue"></div>
-        <h1 class="scan-title">Confirm your booking</h1>
+        <h1 class="scan-title">Check in</h1>
+        <p class="scan-subtitle">Enter your details to confirm your booking.</p>
 
         <div class="input-group">
           <label>First name</label>
@@ -427,11 +423,28 @@
 
         <div class="input-group">
           <label>Booking code</label>
-          <input type="text" class="input code-input" id="checkin-code" placeholder="ABC" maxlength="6">
+          <input type="text" class="input code-input" id="checkin-code" placeholder="ABC" maxlength="3">
         </div>
 
         <button class="btn btn-primary" id="btn-confirm-checkin">Check in</button>
         <p class="small-text mt-16">Code is in your confirmation email</p>
+
+        <div class="spacer"></div>
+      </div>
+
+      <!-- CHECK-OUT: Enter booking code -->
+      <div class="screen" id="screen-checkout-code">
+        <div class="venue-tag" id="checkout-code-venue"></div>
+        <h1 class="scan-title">Check out</h1>
+        <p class="scan-subtitle">Enter your booking code to check out.</p>
+
+        <div class="input-group">
+          <label>Booking code</label>
+          <input type="text" class="input code-input" id="checkout-code" placeholder="ABC" maxlength="3">
+        </div>
+
+        <button class="btn btn-primary" id="btn-find-checkout">Continue</button>
+        <p class="small-text mt-16">Same code you used to check in</p>
 
         <div class="spacer"></div>
       </div>
@@ -550,8 +563,8 @@
         <p class="scan-subtitle centered" id="return-message">Nice to see you at Fink's again - not working this time, just enjoying the coffee.</p>
 
         <div class="credit-box coffee">
-          <div class="credit-amount coffee">+£0.50</div>
-          <div class="credit-label">bonus credit for returning</div>
+          <div class="credit-amount coffee">+£1.00</div>
+          <div class="credit-label">credit for returning to the venue</div>
         </div>
 
         <div class="spacer"></div>
@@ -562,8 +575,7 @@
   </div>
 
   <script type="module">
-    import { db, auth } from './js/firebase-config.js';
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { db } from './js/firebase-config.js';
     import {
       collection, query, where, getDocs, doc, getDoc, updateDoc, serverTimestamp, orderBy, limit
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -573,7 +585,6 @@
     const venueId = urlParams.get('venue') || urlParams.get('v');
     window.venueId = venueId; // Make available globally for onclick handlers
 
-    let currentUser = null;
     let currentVenue = null;
     let activeBooking = null;
     let selectedSpend = null;
@@ -593,11 +604,6 @@
       document.querySelectorAll('[id$="-venue"]').forEach(el => {
         el.textContent = venueText;
       });
-    }
-
-    // Format time from booking
-    function formatTime(timeStr) {
-      return timeStr; // Already formatted like "2:00 PM"
     }
 
     // Calculate session end time
@@ -659,34 +665,10 @@
       }
     }
 
-    // Check for active booking at this venue
-    async function checkActiveBooking(userId) {
+    // Find booking by reference code for CHECK-IN (status: confirmed)
+    async function findBookingForCheckin(code, firstName) {
       try {
         const bookingsRef = collection(db, 'bookings');
-        const q = query(
-          bookingsRef,
-          where('userId', '==', userId),
-          where('venueId', '==', venueId),
-          where('status', '==', 'checked_in')
-        );
-
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-          const doc = snapshot.docs[0];
-          return { id: doc.id, ...doc.data() };
-        }
-        return null;
-      } catch (error) {
-        console.error('Error checking active booking:', error);
-        return null;
-      }
-    }
-
-    // Find booking by reference code
-    async function findBookingByCode(code, firstName) {
-      try {
-        const bookingsRef = collection(db, 'bookings');
-        // Look for booking with matching reference that contains the code
         const q = query(
           bookingsRef,
           where('venueId', '==', venueId),
@@ -697,20 +679,48 @@
 
         const snapshot = await getDocs(q);
 
-        for (const doc of snapshot.docs) {
-          const booking = doc.data();
+        for (const docSnap of snapshot.docs) {
+          const booking = docSnap.data();
           const ref = booking.reference || '';
-          // Check if code matches (case insensitive) and name matches
-          if (ref.toUpperCase().includes(code.toUpperCase())) {
+          // Check if code matches exactly (case insensitive) and first name matches
+          if (ref.toUpperCase() === code.toUpperCase()) {
             const bookingName = booking.user?.name?.split(' ')[0]?.toLowerCase() || '';
-            if (bookingName === firstName.toLowerCase() || !firstName) {
-              return { id: doc.id, ...booking };
+            if (bookingName === firstName.toLowerCase()) {
+              return { id: docSnap.id, ...booking };
             }
           }
         }
         return null;
       } catch (error) {
-        console.error('Error finding booking:', error);
+        console.error('Error finding booking for checkin:', error);
+        return null;
+      }
+    }
+
+    // Find booking by reference code for CHECK-OUT (status: checked_in)
+    async function findBookingForCheckout(code) {
+      try {
+        const bookingsRef = collection(db, 'bookings');
+        const q = query(
+          bookingsRef,
+          where('venueId', '==', venueId),
+          where('status', '==', 'checked_in'),
+          orderBy('checkedInAt', 'desc'),
+          limit(50)
+        );
+
+        const snapshot = await getDocs(q);
+
+        for (const docSnap of snapshot.docs) {
+          const booking = docSnap.data();
+          const ref = booking.reference || '';
+          if (ref.toUpperCase() === code.toUpperCase()) {
+            return { id: docSnap.id, ...booking };
+          }
+        }
+        return null;
+      } catch (error) {
+        console.error('Error finding booking for checkout:', error);
         return null;
       }
     }
@@ -757,34 +767,20 @@
 
       setVenueTags(currentVenue.name);
 
-      // Check auth state
-      onAuthStateChanged(auth, async (user) => {
-        currentUser = user;
-
-        if (!user) {
-          // Not logged in - show new user screen
-          showScreen('screen-new-user');
-          return;
-        }
-
-        // Check for active booking
-        activeBooking = await checkActiveBooking(user.uid);
-
-        if (activeBooking) {
-          // User has active session - show checkout flow
-          showScreen('screen-checkout-type');
-        } else {
-          // No active session - show check-in flow
-          showScreen('screen-checkin-start');
-        }
-      });
+      // Show landing screen - user chooses check-in or check-out
+      showScreen('screen-landing');
     }
 
     // Event handlers
 
-    // Check-in start -> code entry
-    document.getElementById('btn-yes-checkin').addEventListener('click', () => {
+    // Landing: Check in option
+    document.getElementById('option-checkin').addEventListener('click', () => {
       showScreen('screen-checkin-code');
+    });
+
+    // Landing: Check out option
+    document.getElementById('option-checkout').addEventListener('click', () => {
+      showScreen('screen-checkout-code');
     });
 
     // Confirm check-in with code
@@ -797,7 +793,7 @@
         return;
       }
 
-      const booking = await findBookingByCode(code, name);
+      const booking = await findBookingForCheckin(code, name);
 
       if (!booking) {
         alert('Booking not found. Please check your code and name.');
@@ -820,6 +816,27 @@
       }
     });
 
+    // Find booking for checkout with code
+    document.getElementById('btn-find-checkout').addEventListener('click', async () => {
+      const code = document.getElementById('checkout-code').value.trim();
+
+      if (!code) {
+        alert('Please enter your booking code');
+        return;
+      }
+
+      const booking = await findBookingForCheckout(code);
+
+      if (!booking) {
+        alert('No active session found with this code. Have you checked in?');
+        return;
+      }
+
+      // Store the booking and show checkout type screen
+      activeBooking = booking;
+      showScreen('screen-checkout-type');
+    });
+
     // Checkout type selection
     document.getElementById('option-working').addEventListener('click', () => {
       document.getElementById('option-working').classList.add('selected');
@@ -834,7 +851,7 @@
       document.getElementById('option-visiting').classList.add('selected');
       document.getElementById('option-working').classList.remove('selected');
 
-      // Log as return visit and check out
+      // Log as return visit and check out with £1 credit
       if (activeBooking) {
         await checkOut(activeBooking.id, 'return_visit', false);
       }
@@ -879,8 +896,11 @@
       }
     });
 
-    // Auto-uppercase booking code
+    // Auto-uppercase booking codes
     document.getElementById('checkin-code').addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+    document.getElementById('checkout-code').addEventListener('input', (e) => {
       e.target.value = e.target.value.toUpperCase();
     });
 
