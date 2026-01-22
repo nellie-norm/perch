@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perch - Venue QR Codes</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .qr-page {
+      padding: 32px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .qr-page h1 {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .qr-page .subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .qr-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .qr-card h3 {
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .qr-card .area {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 20px;
+    }
+
+    .qr-card img {
+      width: 200px;
+      height: 200px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .qr-card .url {
+      font-size: 11px;
+      color: var(--text-light);
+      word-break: break-all;
+      background: var(--bg);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    .qr-card .btn {
+      font-size: 14px;
+      padding: 12px 20px;
+    }
+
+    .print-btn {
+      display: block;
+      max-width: 300px;
+      margin: 40px auto 0;
+    }
+
+    @media print {
+      .qr-page { padding: 20px; }
+      .qr-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+      .qr-card .btn, .print-btn { display: none; }
+      .qr-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="qr-page">
+    <h1>Venue QR Codes</h1>
+    <p class="subtitle">Print these and place at each venue for check-in/checkout</p>
+
+    <div class="qr-grid" id="qr-grid"></div>
+
+    <button class="btn btn-primary print-btn" onclick="window.print()">
+      Print All QR Codes
+    </button>
+  </div>
+
+  <script>
+    const BASE_URL = 'https://perch.works/scan.html?venue=';
+
+    const venues = [
+      { id: 'allpress', name: 'Allpress Espresso', area: 'Shoreditch' },
+      { id: 'ozone', name: 'Ozone Coffee Roasters', area: 'Old Street' },
+      { id: 'hoxton', name: 'The Hoxton Lobby', area: 'Shoreditch' },
+      { id: 'lookmum', name: 'Look Mum No Hands!', area: 'Clerkenwell' },
+      { id: 'caravan', name: "Caravan King's Cross", area: "King's Cross" },
+      { id: 'attendant', name: 'Attendant Fitzrovia', area: 'Fitzrovia' },
+    ];
+
+    const grid = document.getElementById('qr-grid');
+
+    venues.forEach(venue => {
+      const url = BASE_URL + venue.id;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+
+      const card = document.createElement('div');
+      card.className = 'qr-card';
+      card.innerHTML = `
+        <h3>${venue.name}</h3>
+        <p class="area">${venue.area}</p>
+        <img src="${qrUrl}" alt="QR Code for ${venue.name}">
+        <div class="url">${url}</div>
+        <a href="${qrUrl}" download="${venue.id}-qr.png" class="btn btn-secondary">Download PNG</a>
+      `;
+
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>
