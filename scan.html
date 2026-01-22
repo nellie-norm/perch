@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Perch - Check In</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .scan-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .scan-header {
+      background: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scan-header.success { background: var(--success); }
+    .scan-header.warning { background: #f59e0b; }
+    .scan-header.error { background: var(--error); }
+
+    .scan-header .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .scan-content {
+      flex: 1;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .venue-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .scan-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .scan-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* Screen visibility */
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; flex: 1; }
+
+    /* Status icon */
+    .status-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      color: white;
+      font-size: 32px;
+    }
+
+    .status-icon.success { background: var(--success); }
+    .status-icon.warning { background: #f59e0b; }
+    .status-icon.error { background: var(--error); }
+    .status-icon.coffee { background: #f97316; }
+    .status-icon.neutral { background: var(--text-light); }
+
+    .status-icon svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    /* Option cards */
+    .option-card {
+      padding: 18px;
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      background: var(--card);
+      transition: all 0.2s;
+    }
+
+    .option-card:hover {
+      border-color: var(--primary-light);
+    }
+
+    .option-card.selected {
+      border-color: var(--primary);
+      background: rgba(45, 90, 74, 0.05);
+    }
+
+    .option-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .option-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .option-card.working.selected {
+      border-color: var(--success);
+      background: rgba(52, 199, 89, 0.08);
+    }
+
+    .option-card.working.selected h3 { color: var(--success); }
+
+    .option-card.visiting.selected {
+      border-color: #f97316;
+      background: rgba(249, 115, 22, 0.08);
+    }
+
+    .option-card.visiting.selected h3 { color: #f97316; }
+
+    /* Spend options */
+    .spend-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .spend-option {
+      padding: 16px 18px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .spend-option:hover {
+      border-color: var(--border);
+    }
+
+    .spend-option.selected {
+      background: var(--primary);
+      color: white;
+    }
+
+    .spend-option .check {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .spend-option.selected .check {
+      opacity: 1;
+    }
+
+    /* Credit display */
+    .credit-box {
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .credit-box.positive { background: #E8F9ED; }
+    .credit-box.warning { background: #fffbeb; }
+    .credit-box.error { background: #fef2f2; }
+    .credit-box.neutral { background: var(--bg); }
+    .credit-box.coffee { background: #fff7ed; }
+
+    .credit-amount {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .credit-amount.positive { color: var(--success); }
+    .credit-amount.warning { color: #f59e0b; }
+    .credit-amount.error { color: var(--error); }
+    .credit-amount.neutral { color: var(--text-light); }
+    .credit-amount.coffee { color: #f97316; }
+
+    .credit-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Booking reference display */
+    .booking-display {
+      background: rgba(45, 90, 74, 0.08);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .booking-code {
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 4px;
+    }
+
+    .booking-name {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    /* Warning banner */
+    .warning-banner {
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .warning-banner.yellow {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .warning-banner .icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Session info */
+    .session-info {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* Input styling for code entry */
+    .code-input {
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 6px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    /* Spacer */
+    .spacer { flex: 1; }
+
+    /* Small text */
+    .small-text {
+      font-size: 13px;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    /* Link text */
+    .link-text {
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .link-text:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading state */
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      text-align: center;
+      margin-top: 16px;
+      color: var(--text-secondary);
+    }
+
+    /* Centered content */
+    .centered {
+      text-align: center;
+    }
+
+    /* Divider with text */
+    .divider-text {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 24px 0;
+      color: var(--text-light);
+      font-size: 13px;
+    }
+
+    .divider-text::before,
+    .divider-text::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .scan-page {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .scan-content {
+        padding: 32px;
+      }
+
+      .scan-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scan-page">
+    <!-- Dynamic header - changes color based on state -->
+    <div class="scan-header" id="scan-header">
+      <span class="logo">Perch</span>
+    </div>
+
+    <div class="scan-content">
+      <!-- LOADING SCREEN -->
+      <div class="screen active" id="screen-loading">
+        <div class="spacer"></div>
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading...</p>
+        <div class="spacer"></div>
+      </div>
+
+      <!-- ERROR SCREEN - venue not found -->
+      <div class="screen" id="screen-error">
+        <div class="spacer"></div>
+        <div class="status-icon error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <h1 class="scan-title centered">Something went wrong</h1>
+        <p class="scan-subtitle centered" id="error-message">We couldn't find this venue. Please try scanning the QR code again.</p>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">Go to Perch</button>
+      </div>
+
+      <!-- NEW USER SCREEN - not logged in -->
+      <div class="screen" id="screen-new-user">
+        <div class="venue-tag" id="new-user-venue"></div>
+        <h1 class="scan-title">Need a place to work?</h1>
+        <p class="scan-subtitle">Perch gets you guaranteed workspace in London's best cafes and restaurants. WiFi, power, and a welcome - all for a few quid.</p>
+
+        <div class="spacer"></div>
+
+        <button class="btn btn-primary" onclick="window.location.href='login.html?redirect=scan&venue=' + venueId">Sign up free</button>
+        <button class="btn btn-secondary mt-16" onclick="window.location.href='index.html'">How it works</button>
+
+        <div class="divider-text">or</div>
+
+        <p class="small-text">Already have an account? <span class="link-text" onclick="window.location.href='login.html?redirect=scan&venue=' + venueId">Log in</span></p>
+      </div>
+
+      <!-- CHECK-IN: Step 1 - Confirm start -->
+      <div class="screen" id="screen-checkin-start">
+        <div class="venue-tag" id="checkin-venue"></div>
+        <h1 class="scan-title">Starting a work session?</h1>
+        <p class="scan-subtitle">Check in to confirm your arrival. Scan again when you leave to earn credit.</p>
+
+        <div class="spacer"></div>
+
+        <button class="btn btn-primary" id="btn-yes-checkin">Yes, check me in</button>
+        <button class="btn btn-secondary mt-16" onclick="window.location.href='index.html'">No, just browsing</button>
+      </div>
+
+      <!-- CHECK-IN: Step 2 - Enter booking code -->
+      <div class="screen" id="screen-checkin-code">
+        <div class="venue-tag" id="checkin-code-venue"></div>
+        <h1 class="scan-title">Confirm your booking</h1>
+
+        <div class="input-group">
+          <label>First name</label>
+          <input type="text" class="input" id="checkin-name" placeholder="Enter your first name">
+        </div>
+
+        <div class="input-group">
+          <label>Booking code</label>
+          <input type="text" class="input code-input" id="checkin-code" placeholder="ABC" maxlength="6">
+        </div>
+
+        <button class="btn btn-primary" id="btn-confirm-checkin">Check in</button>
+        <p class="small-text mt-16">Code is in your confirmation email</p>
+
+        <div class="spacer"></div>
+      </div>
+
+      <!-- CHECK-IN: Step 3 - Success -->
+      <div class="screen" id="screen-checkin-success">
+        <div class="status-icon success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h1 class="scan-title centered">You're checked in!</h1>
+
+        <div class="booking-display">
+          <div class="booking-code" id="success-code">ABC</div>
+          <div class="booking-name" id="success-name">Alex</div>
+        </div>
+
+        <p class="scan-subtitle centered">If anyone asks, just say you're with Perch. Scan again when you leave.</p>
+
+        <div class="spacer"></div>
+
+        <p class="session-info" id="session-time">Session: 2:00pm - 5:00pm</p>
+      </div>
+
+      <!-- CHECK-OUT: Step 1 - Were you working? -->
+      <div class="screen" id="screen-checkout-type">
+        <div class="venue-tag" id="checkout-venue"></div>
+        <h1 class="scan-title">Checking out?</h1>
+        <p class="scan-subtitle">Were you working here today?</p>
+
+        <div class="option-card working" id="option-working">
+          <h3>Yes, I was working</h3>
+          <p>Log your session & earn credit</p>
+        </div>
+
+        <div class="option-card visiting" id="option-visiting">
+          <h3>No, just grabbing coffee</h3>
+          <p>Nice to see you back!</p>
+        </div>
+
+        <div class="spacer"></div>
+      </div>
+
+      <!-- CHECK-OUT: Step 2 - Log spend -->
+      <div class="screen" id="screen-checkout-spend">
+        <div class="venue-tag" id="checkout-spend-venue"></div>
+        <h1 class="scan-title">How much did you spend?</h1>
+        <p class="scan-subtitle">Roughly - we're not counting pennies.</p>
+
+        <div class="spend-options">
+          <div class="spend-option" data-value="nothing">Nothing <span class="check">✓</span></div>
+          <div class="spend-option" data-value="under5">Under £5 <span class="check">✓</span></div>
+          <div class="spend-option" data-value="5-10">£5 - £10 <span class="check">✓</span></div>
+          <div class="spend-option" data-value="10-15">£10 - £15 <span class="check">✓</span></div>
+          <div class="spend-option" data-value="15+">£15+ <span class="check">✓</span></div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-confirm-spend" disabled>Confirm</button>
+      </div>
+
+      <!-- CHECK-OUT: Success - earned credit -->
+      <div class="screen" id="screen-checkout-success">
+        <div class="status-icon success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h1 class="scan-title centered">Thanks!</h1>
+
+        <div class="credit-box positive">
+          <div class="credit-amount positive" id="credit-earned">+£1.00</div>
+          <div class="credit-label">credit for supporting the venue</div>
+        </div>
+
+        <p class="session-info" id="session-duration">Session: 2h 15m at Fink's</p>
+
+        <div class="spacer"></div>
+
+        <button class="btn btn-secondary" onclick="window.location.href='index.html'">Book your next session</button>
+      </div>
+
+      <!-- CHECK-OUT: No spend warning -->
+      <div class="screen" id="screen-checkout-no-spend">
+        <div class="status-icon neutral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <h1 class="scan-title centered">Session logged</h1>
+
+        <div class="warning-banner yellow">
+          <span class="icon">💡</span>
+          <span>Credit is only earned when you support the venue by buying something. Even a coffee helps!</span>
+        </div>
+
+        <div class="credit-box neutral">
+          <div class="credit-amount neutral">£0</div>
+          <div class="credit-label">no spend = no credit</div>
+        </div>
+
+        <p class="session-info" id="no-spend-duration">Session: 2h 15m at Fink's</p>
+
+        <div class="spacer"></div>
+
+        <button class="btn btn-secondary" onclick="window.location.href='index.html'">Book your next session</button>
+      </div>
+
+      <!-- CHECK-OUT: Return visit (just coffee) -->
+      <div class="screen" id="screen-checkout-return">
+        <div class="status-icon coffee">☕</div>
+        <h1 class="scan-title centered">Welcome back!</h1>
+        <p class="scan-subtitle centered" id="return-message">Nice to see you at Fink's again - not working this time, just enjoying the coffee.</p>
+
+        <div class="credit-box coffee">
+          <div class="credit-amount coffee">+£0.50</div>
+          <div class="credit-label">bonus credit for returning</div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <button class="btn btn-secondary" onclick="window.location.href='index.html'">Book a work session</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import {
+      collection, query, where, getDocs, doc, getDoc, updateDoc, serverTimestamp, orderBy, limit
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Get venue ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const venueId = urlParams.get('venue') || urlParams.get('v');
+    window.venueId = venueId; // Make available globally for onclick handlers
+
+    let currentUser = null;
+    let currentVenue = null;
+    let activeBooking = null;
+    let selectedSpend = null;
+
+    // Screen management
+    function showScreen(screenId, headerClass = '') {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      const header = document.getElementById('scan-header');
+      header.className = 'scan-header ' + headerClass;
+    }
+
+    // Set venue tag text on multiple elements
+    function setVenueTags(venueName) {
+      const venueText = `📍 ${venueName}`;
+      document.querySelectorAll('[id$="-venue"]').forEach(el => {
+        el.textContent = venueText;
+      });
+    }
+
+    // Format time from booking
+    function formatTime(timeStr) {
+      return timeStr; // Already formatted like "2:00 PM"
+    }
+
+    // Calculate session end time
+    function getEndTime(timeStr, durationHours) {
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return timeStr;
+
+      let hours = parseInt(match[1]);
+      const minutes = match[2];
+      const isPM = match[3].toUpperCase() === 'PM';
+
+      if (isPM && hours !== 12) hours += 12;
+      if (!isPM && hours === 12) hours = 0;
+
+      hours += durationHours;
+
+      const endPM = hours >= 12;
+      if (hours > 12) hours -= 12;
+      if (hours === 0) hours = 12;
+
+      return `${hours}:${minutes} ${endPM ? 'PM' : 'AM'}`;
+    }
+
+    // Calculate session duration in hours and minutes
+    function calculateDuration(checkinTime) {
+      const now = new Date();
+      const diffMs = now - checkinTime.toDate();
+      const diffMins = Math.floor(diffMs / 60000);
+      const hours = Math.floor(diffMins / 60);
+      const mins = diffMins % 60;
+
+      if (hours > 0) {
+        return `${hours}h ${mins}m`;
+      }
+      return `${mins}m`;
+    }
+
+    // Load venue data
+    async function loadVenue() {
+      if (!venueId) {
+        showScreen('screen-error');
+        return null;
+      }
+
+      try {
+        const venueDoc = await getDoc(doc(db, 'venues', venueId));
+        if (!venueDoc.exists()) {
+          showScreen('screen-error');
+          document.getElementById('error-message').textContent =
+            "We couldn't find this venue. The QR code may be outdated.";
+          return null;
+        }
+
+        return { id: venueDoc.id, ...venueDoc.data() };
+      } catch (error) {
+        console.error('Error loading venue:', error);
+        showScreen('screen-error');
+        return null;
+      }
+    }
+
+    // Check for active booking at this venue
+    async function checkActiveBooking(userId) {
+      try {
+        const bookingsRef = collection(db, 'bookings');
+        const q = query(
+          bookingsRef,
+          where('userId', '==', userId),
+          where('venueId', '==', venueId),
+          where('status', '==', 'checked_in')
+        );
+
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const doc = snapshot.docs[0];
+          return { id: doc.id, ...doc.data() };
+        }
+        return null;
+      } catch (error) {
+        console.error('Error checking active booking:', error);
+        return null;
+      }
+    }
+
+    // Find booking by reference code
+    async function findBookingByCode(code, firstName) {
+      try {
+        const bookingsRef = collection(db, 'bookings');
+        // Look for booking with matching reference that contains the code
+        const q = query(
+          bookingsRef,
+          where('venueId', '==', venueId),
+          where('status', '==', 'confirmed'),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        );
+
+        const snapshot = await getDocs(q);
+
+        for (const doc of snapshot.docs) {
+          const booking = doc.data();
+          const ref = booking.reference || '';
+          // Check if code matches (case insensitive) and name matches
+          if (ref.toUpperCase().includes(code.toUpperCase())) {
+            const bookingName = booking.user?.name?.split(' ')[0]?.toLowerCase() || '';
+            if (bookingName === firstName.toLowerCase() || !firstName) {
+              return { id: doc.id, ...booking };
+            }
+          }
+        }
+        return null;
+      } catch (error) {
+        console.error('Error finding booking:', error);
+        return null;
+      }
+    }
+
+    // Check in to a booking
+    async function checkIn(bookingId) {
+      try {
+        await updateDoc(doc(db, 'bookings', bookingId), {
+          status: 'checked_in',
+          checkedInAt: serverTimestamp()
+        });
+        return true;
+      } catch (error) {
+        console.error('Error checking in:', error);
+        return false;
+      }
+    }
+
+    // Check out from a booking
+    async function checkOut(bookingId, spendAmount, wasWorking) {
+      try {
+        const creditEarned = spendAmount === 'nothing' ? 0 : 1.00;
+
+        await updateDoc(doc(db, 'bookings', bookingId), {
+          status: 'completed',
+          checkedOutAt: serverTimestamp(),
+          spendAmount: spendAmount,
+          wasWorking: wasWorking,
+          creditEarned: creditEarned
+        });
+
+        return creditEarned;
+      } catch (error) {
+        console.error('Error checking out:', error);
+        return null;
+      }
+    }
+
+    // Initialize the page
+    async function init() {
+      // Load venue first
+      currentVenue = await loadVenue();
+      if (!currentVenue) return;
+
+      setVenueTags(currentVenue.name);
+
+      // Check auth state
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+
+        if (!user) {
+          // Not logged in - show new user screen
+          showScreen('screen-new-user');
+          return;
+        }
+
+        // Check for active booking
+        activeBooking = await checkActiveBooking(user.uid);
+
+        if (activeBooking) {
+          // User has active session - show checkout flow
+          showScreen('screen-checkout-type');
+        } else {
+          // No active session - show check-in flow
+          showScreen('screen-checkin-start');
+        }
+      });
+    }
+
+    // Event handlers
+
+    // Check-in start -> code entry
+    document.getElementById('btn-yes-checkin').addEventListener('click', () => {
+      showScreen('screen-checkin-code');
+    });
+
+    // Confirm check-in with code
+    document.getElementById('btn-confirm-checkin').addEventListener('click', async () => {
+      const name = document.getElementById('checkin-name').value.trim();
+      const code = document.getElementById('checkin-code').value.trim();
+
+      if (!name || !code) {
+        alert('Please enter your name and booking code');
+        return;
+      }
+
+      const booking = await findBookingByCode(code, name);
+
+      if (!booking) {
+        alert('Booking not found. Please check your code and name.');
+        return;
+      }
+
+      const success = await checkIn(booking.id);
+
+      if (success) {
+        document.getElementById('success-code').textContent = code.toUpperCase();
+        document.getElementById('success-name').textContent = name;
+
+        const endTime = getEndTime(booking.time, booking.duration);
+        document.getElementById('session-time').textContent =
+          `Session: ${booking.time} - ${endTime}`;
+
+        showScreen('screen-checkin-success', 'success');
+      } else {
+        alert('Failed to check in. Please try again.');
+      }
+    });
+
+    // Checkout type selection
+    document.getElementById('option-working').addEventListener('click', () => {
+      document.getElementById('option-working').classList.add('selected');
+      document.getElementById('option-visiting').classList.remove('selected');
+
+      setTimeout(() => {
+        showScreen('screen-checkout-spend');
+      }, 200);
+    });
+
+    document.getElementById('option-visiting').addEventListener('click', async () => {
+      document.getElementById('option-visiting').classList.add('selected');
+      document.getElementById('option-working').classList.remove('selected');
+
+      // Log as return visit and check out
+      if (activeBooking) {
+        await checkOut(activeBooking.id, 'return_visit', false);
+      }
+
+      document.getElementById('return-message').textContent =
+        `Nice to see you at ${currentVenue.name} again - not working this time, just enjoying the coffee.`;
+
+      setTimeout(() => {
+        showScreen('screen-checkout-return', 'success');
+      }, 200);
+    });
+
+    // Spend option selection
+    document.querySelectorAll('.spend-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.spend-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedSpend = option.dataset.value;
+        document.getElementById('btn-confirm-spend').disabled = false;
+      });
+    });
+
+    // Confirm spend and checkout
+    document.getElementById('btn-confirm-spend').addEventListener('click', async () => {
+      if (!selectedSpend || !activeBooking) return;
+
+      const credit = await checkOut(activeBooking.id, selectedSpend, true);
+
+      const duration = activeBooking.checkedInAt
+        ? calculateDuration(activeBooking.checkedInAt)
+        : '2h 15m';
+
+      const durationText = `Session: ${duration} at ${currentVenue.name}`;
+
+      if (selectedSpend === 'nothing') {
+        document.getElementById('no-spend-duration').textContent = durationText;
+        showScreen('screen-checkout-no-spend');
+      } else {
+        document.getElementById('credit-earned').textContent = `+£${credit.toFixed(2)}`;
+        document.getElementById('session-duration').textContent = durationText;
+        showScreen('screen-checkout-success', 'success');
+      }
+    });
+
+    // Auto-uppercase booking code
+    document.getElementById('checkin-code').addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
